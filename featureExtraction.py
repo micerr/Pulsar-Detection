@@ -35,7 +35,7 @@ class PCA(PipelineStage):
         self.m = m
 
     def __str__(self):
-        return 'PCA\nu = %s\nC = %s\n' % (self.mean, self.C)
+        return 'PCA\nmu = %s\nC = %s\n' % (self.mean, self.C)
 
 
 class LDA(PipelineStage):
@@ -47,24 +47,27 @@ class LDA(PipelineStage):
         self.m = None
 
     def compute(self, model, D, L):
+        nSamples = D.shape[1]
         K = L.max()+1
         m = self.m if self.m <= K-1 else K-1
 
         Sw = 0
         Sb = 0
+        # Dataset mean
+        meanD = mcol(D.mean(1))
         for i in range(K):
             DCl = D[:, L == i]  # take only samples of the class-i
-            DClC = DCl - mcol(DCl.mean(1))  # center the data
-            MC = mcol(DCl.mean(1)) - mcol(D.mean(1))  # center the mean of class, respect the global mean
-            ## COMPUTING ELEMENT-I OF THE SUMMATORY OF Sb
-            Sb += DClC.shape[1] * numpy.dot(MC, MC.T)
-            ## COMPUTING ELEMENT-I OF THE SUMMATORY OF Sw
+            meanClass = mcol(DCl.mean(1))  # compute the mean of the class data
+            DClC = DCl - meanClass  # center the class data
+            mC = meanClass - meanD  # center the mean of class, respect the global mean
+            ## COMPUTING ELEMENT-I OF THE SUMMARY OF Sb
+            Sb += DClC.shape[1] * numpy.dot(mC, mC.T)
+            ## COMPUTING ELEMENT-I OF THE SUMMARY OF Sw
             Sw += numpy.dot(DClC, DClC.T)
-        self.Sw = Sw = Sw / D.shape[1]
-        self.Sb = Sb = Sb / D.shape[1]
+        self.Sw = Sw = Sw / nSamples
+        self.Sb = Sb = Sb / nSamples
 
-
-        ## COMPUTING THE EIG VALUES OF THE GENERALIZED EIGENVALUE PROBLEM FOR HERMITIAN MATRICIES
+        ## COMPUTING THE EIG VALUES OF THE GENERALIZED EIGENVALUE PROBLEM FOR HERMITIAN MATRICES
         s, U = scipy.linalg.eigh(Sb, Sw)  # numpy here don't work, numpy don't solve the generalized problem
         P = U[:, ::-1][:, 0:m]  # take the  dimension
 
