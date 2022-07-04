@@ -40,11 +40,11 @@ class Model:
 class CrossValidator:
 
     def __init__(self):
-        # Implement
+        self.pipeline = None
         return
 
     def setEstimator(self, pipeline):
-        # Implement
+        self.pipeline = pipeline
         return
 
     def setEstimatorParams(self, params):
@@ -53,4 +53,8 @@ class CrossValidator:
 
     def setNumFolds(self, k):
         # Implement
+        return
+
+    def fit(self, D, L):
+        # implement
         return
