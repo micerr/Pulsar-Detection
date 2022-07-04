@@ -33,9 +33,6 @@ class Model:
     def __init__(self):
         pass
 
-    def __str__(self):
-        pass
-
     def transform(self, D, L):
         pass
 
@@ -70,12 +67,11 @@ class CrossValidator:
             sizeFold = nSamples / self.k
         sizeFold = int(sizeFold)
 
-        # numpy.random.seed(nSamples*K*dim)
-        numpy.random.seed(0)
+        numpy.random.seed(nSamples*K)
         idx = numpy.random.permutation(nSamples)
 
         SPost = numpy.zeros((K, nSamples))
-        logSJoint = numpy.zeros((K, nSamples))
+        pred = numpy.zeros((1, nSamples))
         for i in range(self.k):
             # divide the random numbers in Keff-fold parts
             idxTest = idx[(i * sizeFold):((i + 1) * sizeFold)]
@@ -87,10 +83,8 @@ class CrossValidator:
             LTE = L[idxTest]
 
             model = self.pipeline.fit(DTR, LTR)
-            SPost[:, idxTest] = model.transform(DTE, LTE)
+            SPost[:, idxTest], pred[:, idxTest] = model.transform(DTE, LTE)
 
-        ## --------- EVALUATION ------------   
-
-        pred = SPost.argmax(0)
+        ## --------- EVALUATION ------------
         err = (pred != L).sum() / nSamples  # calculate the error of model
         print(err)

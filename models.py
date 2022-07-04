@@ -43,11 +43,12 @@ class GenerativeModel(Model):
         #     # Multiclass
 
         logSJoint = ll + numpy.log(self.prior)
-        # Can we skip the below part in order to get time ? see slide 36 of GenerativeLinearQuadratic
+        # Can we skip the below part in order to get time, see slide 36 of GenerativeLinearQuadratic
         logSMarginal = mrow(scipy.special.logsumexp(logSJoint, axis=0))
         logSPost = logSJoint - logSMarginal
         SPost = numpy.exp(logSPost)
-        return SPost
+        pred = SPost.argmax(0)
+        return SPost, pred
 
 class MVGModel(GenerativeModel):
 
@@ -82,3 +83,22 @@ class TiedMVGModel(GenerativeModel):
 
     def transform(self, D, L):
         return super().transform(D, L)
+
+class LogRegModel(Model):
+
+    def __init__(self, w, b):
+        super().__init__()
+        self.w = w
+        self.b = b
+
+    def transform(self, D, L):
+        """
+        Here we compute the score vector, is a vector with NumSample elements
+        it's computed by :      s(xt) = w.T * xt + b
+        """
+        SPost = numpy.dot(self.w.T, D) + self.b  # (1, NumSamples)
+        """
+        s[i] > 0 ==> LP[i] = 1 ; else LP[i] = 0
+        """
+        pred = SPost > 0
+        return None, pred
