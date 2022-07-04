@@ -16,7 +16,6 @@ class MVG(PipelineStage):
     def compute(self, model, D, L):
         dim = D.shape[0]
         K = L.max()+1
-        nSamples = D.shape[1]
 
         u = numpy.zeros((dim, K))  # array of means vectors by class [MATRIX (dim, K)]
         C = numpy.zeros((K, dim, dim))  # array of covariance matrices by class
@@ -30,12 +29,12 @@ class MVG(PipelineStage):
             # center the points
             DClC = DCl - u[:, i:i+1]
             # compute the covariance matrix
-            C[i] = numpy.dot(DClC, DClC.T) / nSamples
+            C[i] = numpy.dot(DClC, DClC.T) / DCl.shape[1]
 
         self.u = u
         self.C = C
 
-        return MVGModel(u, C), D, L
+        return MVGModel(K, u, C), D, L
 
     def __str__(self):
         return 'MVG\n%s\n%s\n' % (self.u, self.C)
@@ -51,7 +50,6 @@ class NaiveBayesMVG(PipelineStage):
     def compute(self, model, D, L):
         dim = D.shape[0]
         K = L.max()+1
-        nSamples = D.shape[1]
 
         u = numpy.zeros((dim, K))  # array of means vectors by class [MATRIX (dim, K)]
         C = numpy.zeros((K, dim, dim))  # array of covariance matrices by class
@@ -65,12 +63,12 @@ class NaiveBayesMVG(PipelineStage):
             # center the points
             DClC = DCl - u[:, i:i+1]
             # compute the covariance matrix
-            C[i] = numpy.diag((DClC**2).sum(1))/nSamples
+            C[i] = numpy.diag((DClC**2).sum(1))/DCl.shape[1]
 
         self.u = u
         self.C = C
 
-        return MVGModel(u, C), D, L
+        return MVGModel(K, u, C), D, L
 
     def __str__(self):
         return 'NaiveBayesMVG\n%s\n%s\n' % (self.u, self.C)
@@ -89,7 +87,7 @@ class TiedMVG(PipelineStage):
         nSamples = D.shape[1]
 
         u = numpy.zeros((dim, K))  # array of means vectors by class [MATRIX (dim, K)]
-        C = numpy.zeros((K, dim, dim))  # array of covariance matrices by class
+        C = numpy.zeros((dim, dim))  # array of covariance matrices by class
 
         for i in range(K):
             ## ESTIMATION OF MODEL
@@ -107,7 +105,7 @@ class TiedMVG(PipelineStage):
         self.u = u
         self.C = C
 
-        return TiedMVGModel(u, C), D, L
+        return TiedMVGModel(K, u, C), D, L
 
     def __str__(self):
         return 'TiedMVG\n%s\n%s\n' % (self.u, self.C)
@@ -126,7 +124,7 @@ class TiedNaiveBayesMVG(PipelineStage):
         nSamples = D.shape[1]
 
         u = numpy.zeros((dim, K))  # array of means vectors by class [MATRIX (dim, K)]
-        C = numpy.zeros((K, dim, dim))  # array of covariance matrices by class
+        C = numpy.zeros((dim, dim))  # array of covariance matrices by class
 
         for i in range(K):
             ## ESTIMATION OF MODEL
@@ -144,7 +142,7 @@ class TiedNaiveBayesMVG(PipelineStage):
         self.u = u
         self.C = C
 
-        return TiedMVGModel(u, C), D, L
+        return TiedMVGModel(K, u, C), D, L
 
     def __str__(self):
         return 'TiedNaiveBayesMVG\n%s\n%s\n' % (self.u, self.C)

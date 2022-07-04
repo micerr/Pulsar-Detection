@@ -1,3 +1,5 @@
+import numpy
+
 class Pipeline:
 
     def __init__(self):
@@ -40,6 +42,7 @@ class Model:
 class CrossValidator:
 
     def __init__(self):
+        self.k = None
         self.pipeline = None
         return
 
@@ -52,9 +55,42 @@ class CrossValidator:
         return
 
     def setNumFolds(self, k):
-        # Implement
+        self.k = k
+        if k < 2:
+            self.k = 2
         return
 
     def fit(self, D, L):
-        # implement
-        return
+
+        K = L.max() + 1
+        nSamples = D.shape[1]
+        if nSamples % self.k != 0:
+            sizeFold = nSamples//self.k + 1
+        else:
+            sizeFold = nSamples / self.k
+        sizeFold = int(sizeFold)
+
+        # numpy.random.seed(nSamples*K*dim)
+        numpy.random.seed(0)
+        idx = numpy.random.permutation(nSamples)
+
+        SPost = numpy.zeros((K, nSamples))
+        logSJoint = numpy.zeros((K, nSamples))
+        for i in range(self.k):
+            # divide the random numbers in Keff-fold parts
+            idxTest = idx[(i * sizeFold):((i + 1) * sizeFold)]
+            idxTrain = numpy.append(idx[:(i * sizeFold)], idx[((i + 1) * sizeFold):])
+
+            DTR = D[:, idxTrain]
+            LTR = L[idxTrain]
+            DTE = D[:, idxTest]
+            LTE = L[idxTest]
+
+            model = self.pipeline.fit(DTR, LTR)
+            SPost[:, idxTest] = model.transform(DTE, LTE)
+
+        ## --------- EVALUATION ------------   
+
+        pred = SPost.argmax(0)
+        err = (pred != L).sum() / nSamples  # calculate the error of model
+        print(err)
