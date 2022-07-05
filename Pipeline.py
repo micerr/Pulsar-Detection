@@ -1,5 +1,8 @@
 import numpy
 
+from Tools import assign_label_bin, accuracy, DCF_norm_bin, DCF_min
+
+
 class Pipeline:
 
     def __init__(self):
@@ -39,23 +42,25 @@ class Model:
 class CrossValidator:
 
     def __init__(self):
+        self.Cfn = 1
+        self.Cfp = 1
+        self.pi = 0.5
         self.k = None
         self.pipeline = None
-        return
 
     def setEstimator(self, pipeline):
         self.pipeline = pipeline
         return
 
-    def setEstimatorParams(self, params):
-        # Implement
-        return
+    def setEstimatorParams(self, pi, Cfn, Cfp):
+        self.pi = pi
+        self.Cfn = Cfn
+        self.Cfp = Cfp
 
     def setNumFolds(self, k):
         self.k = k
         if k < 2:
             self.k = 2
-        return
 
     def fit(self, D, L):
 
@@ -70,8 +75,7 @@ class CrossValidator:
         numpy.random.seed(nSamples*K)
         idx = numpy.random.permutation(nSamples)
 
-        SPost = numpy.zeros((K, nSamples))
-        pred = numpy.zeros((1, nSamples))
+        llr = numpy.zeros((1, nSamples))
         for i in range(self.k):
             # divide the random numbers in Keff-fold parts
             idxTest = idx[(i * sizeFold):((i + 1) * sizeFold)]
@@ -83,8 +87,13 @@ class CrossValidator:
             LTE = L[idxTest]
 
             model = self.pipeline.fit(DTR, LTR)
-            SPost[:, idxTest], pred[:, idxTest] = model.transform(DTE, LTE)
+            llr[:, idxTest] = model.transform(DTE, LTE)
 
-        ## --------- EVALUATION ------------
-        err = (pred != L).sum() / nSamples  # calculate the error of model
-        print(err)
+        pred = assign_label_bin(llr, self.pi, self.Cfn, self.Cfp)
+        acc = accuracy(pred, L)
+        print("Error:\t",  (1-acc)*100, "%")
+        bCost = DCF_norm_bin(llr, L, self.pi, self.Cfn, self.Cfp)
+        minCost = DCF_min(llr, L, self.pi, self.Cfn, self.Cfp)
+        print("DCF norm:\t", bCost, "\nDCF min:\t", minCost, "\n")
+
+        return llr

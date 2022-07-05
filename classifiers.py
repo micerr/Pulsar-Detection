@@ -38,7 +38,7 @@ class MVG(PipelineStage):
         return MVGModel(K, u, C), D, L
 
     def __str__(self):
-        return 'MVG\n%s\n%s\n' % (self.u, self.C)
+        return 'MVG'
 
 class NaiveBayesMVG(PipelineStage):
 
@@ -72,7 +72,7 @@ class NaiveBayesMVG(PipelineStage):
         return MVGModel(K, u, C), D, L
 
     def __str__(self):
-        return 'NaiveBayesMVG\n%s\n%s\n' % (self.u, self.C)
+        return 'NaiveBayesMVG'
 
 class TiedMVG(PipelineStage):
 
@@ -109,7 +109,7 @@ class TiedMVG(PipelineStage):
         return TiedMVGModel(K, u, C), D, L
 
     def __str__(self):
-        return 'TiedMVG\n%s\n%s\n' % (self.u, self.C)
+        return 'TiedMVG'
 
 class TiedNaiveBayesMVG(PipelineStage):
 
@@ -146,7 +146,7 @@ class TiedNaiveBayesMVG(PipelineStage):
         return TiedMVGModel(K, u, C), D, L
 
     def __str__(self):
-        return 'TiedNaiveBayesMVG\n%s\n%s\n' % (self.u, self.C)
+        return 'TiedNaiveBayesMVG'
 
 class LogisticRegression(PipelineStage):
 
@@ -216,6 +216,10 @@ class LogisticRegression(PipelineStage):
         self.dim = D.shape[0]
         self.Z = (L * 2.0) - 1.0
 
+        if self.lmbd is None:
+            print("Error LogReg: no Lambda is selected for the regularizer")
+            return None, D, L
+
         if self.isExpanded:
             nSamples = D.shape[1]
             phix = numpy.zeros((self.dim ** 2 + self.dim, nSamples))
@@ -244,4 +248,4 @@ class LogisticRegression(PipelineStage):
         return LogRegModel(wBest, bBest, self.isExpanded), D, L
 
     def __str__(self):
-        return 'LogReg\n%s\n%s\n%s\n' % (self.b, self.w, self.min)
+        return 'LogReg'

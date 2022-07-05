@@ -4,7 +4,7 @@ from Pipeline import Pipeline, CrossValidator
 from Tools import mcol, vec
 from featureExtraction import PCA, LDA
 from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression
-from plots import Histogram, Scatter
+from plots import Histogram, Scatter, print_DCFs, print_ROCs
 
 
 def load_iris():
@@ -36,6 +36,7 @@ def load_iris_binary():
     L[L == 2] = 0  # We assign label 0 to virginica (was label 2)
     return D, L
 
+
 if __name__ == "__main__":
     D, L = load_iris()
     (DTR, LTR), (DTE, LTE) = split_db_2to1(D, L, 0)
@@ -46,23 +47,20 @@ if __name__ == "__main__":
     BD, BL = load_iris_binary()
     (BDTR, BLTR), (BDTE, BLTE) = split_db_2to1(BD, BL)
 
-    # for model in [MVG(), NaiveBayesMVG(), TiedMVG(), TiedNaiveBayesMVG()]:
-    #     pipe = Pipeline()
-    #     pipe.addStages([model])
-#
-    #     cv = CrossValidator()
-    #     cv.setNumFolds(D.shape[1])
-    #     cv.setEstimator(pipe)
-    #     cv.fit(D, L)
-#
-    for lambd in [10**-6, 10**-3, 10**-1, 1]:
+    lrLinear = LogisticRegression()
+    lrLinear.setLambda(0.1)
+    lrQuadratic = LogisticRegression()
+    lrQuadratic.setExpanded(True)
+    lrQuadratic.setLambda(0.1)
+    models = [MVG(), NaiveBayesMVG(), TiedMVG(), TiedNaiveBayesMVG(), lrLinear, lrQuadratic]
+
+    llrs = []
+
+    for model in models:
         pipe = Pipeline()
-        lr = LogisticRegression()
-        # lr.setPiT(0.5)  # Remove this if you don't want balance it
-        lr.setLambda(lambd)
-        lr.setExpanded(True)
-        pipe.addStages([lr])
-        model = pipe.fit(BDTR, BLTR)
-        SPost, pred = model.transform(BDTE, BLTE)
-        err = (pred != BLTE).sum() / BLTE.size  # calculate the error of model
-        print(err*100)
+        pipe.addStages([model])
+        cv = CrossValidator()
+        cv.setNumFolds(BD.shape[1])
+        cv.setEstimator(pipe)
+        print(model)
+        cv.fit(BD, BL)

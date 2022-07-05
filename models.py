@@ -33,22 +33,17 @@ class GenerativeModel(Model):
         # Compute log-likelihood
         ll = self.logLikelihood(ll, D, self.mu, self.C)
 
-        # if K == 2:
-        #     # Binary
-        #     prior = self.prior[0]
-        #     llr = ll[0] - ll[1]
-        #     threshold = - numpy.log(prior/(1-prior))
-        #     return llr > threshold
-        # else:
-        #     # Multiclass
+        if K == 2:
+            # Binary
+            llr = ll[1] - ll[0]
+            return llr
 
         logSJoint = ll + numpy.log(self.prior)
         # Can we skip the below part in order to get time, see slide 36 of GenerativeLinearQuadratic
         logSMarginal = mrow(scipy.special.logsumexp(logSJoint, axis=0))
         logSPost = logSJoint - logSMarginal
         SPost = numpy.exp(logSPost)
-        pred = SPost.argmax(0)
-        return SPost, pred
+        return ll
 
 class MVGModel(GenerativeModel):
 
@@ -108,9 +103,5 @@ class LogRegModel(Model):
 
             D = phix
 
-        SPost = numpy.dot(self.w.T, D) + self.b  # (1, NumSamples)
-        """
-        s[i] > 0 ==> LP[i] = 1 ; else LP[i] = 0
-        """
-        pred = SPost > 0
-        return None, pred
+        llrPost = numpy.dot(self.w.T, D) + self.b  # (1, NumSamples)
+        return llrPost
