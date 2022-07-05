@@ -2,7 +2,7 @@ import numpy
 import scipy.optimize
 
 from Pipeline import PipelineStage
-from Tools import mcol
+from Tools import mcol, vec
 from models import MVGModel, TiedMVGModel, LogRegModel
 
 
@@ -162,6 +162,7 @@ class LogisticRegression(PipelineStage):
         self.D = None
         self.dim = None
         self.piT = None  # balancer prior prob
+        self.isExpanded = False
         
     def J(self, x):
         # J(w, b), in v there are D+1 elements, D element of array w, and the cost b
@@ -169,7 +170,7 @@ class LogisticRegression(PipelineStage):
         Compute and return the objective function value using DTR,
         LTR, l
         """
-        w, b = x[0:self.dim], x[-1]
+        w, b = x[0:(self.dim if not self.isExpanded else (self.dim**2 + self.dim))], x[-1]
         w = mcol(w)  # (D, 1) D := Dimensions
         """
         Here we are computing 1/n * sum (log (1 + exp(-z1*(w.T * xi + b)) ))
@@ -205,6 +206,9 @@ class LogisticRegression(PipelineStage):
     def setPiT(self, pi):
         self.piT = pi
 
+    def setExpanded(self, isExpanded):
+        self.isExpanded = isExpanded
+
     def compute(self, model, D, L):
         self.D = D
         self.DT = D[:, L == 1]
@@ -212,22 +216,32 @@ class LogisticRegression(PipelineStage):
         self.dim = D.shape[0]
         self.Z = (L * 2.0) - 1.0
 
+        if self.isExpanded:
+            nSamples = D.shape[1]
+            phix = numpy.zeros((self.dim ** 2 + self.dim, nSamples))
+
+            for i in range(nSamples):
+                x = D[:, i:i + 1]
+                phix[:, i:i + 1] = numpy.vstack((vec(numpy.dot(x, x.T)), x))
+
+            self.D = phix
+
         # find the minimum of function J(w, b)
         bestParam, minimum, d = scipy.optimize.fmin_l_bfgs_b(
             self.J,
-            numpy.zeros(self.dim + 1),
+            numpy.zeros((self.dim + 1) if not self.isExpanded else (self.dim**2 + self.dim + 1)),
             # the starting point is not important because the function is convex
             approx_grad=True
         )
 
-        wBest = mcol(bestParam[0: self.dim])  # (D, 1)
+        wBest = mcol(bestParam[0:(self.dim if not self.isExpanded else (self.dim**2 + self.dim))])  # (D, 1)
         bBest = bestParam[-1]  # scalar
         
         self.w = wBest
         self.b = bBest
         self.min = minimum
         
-        return LogRegModel(wBest, bBest), D, L
+        return LogRegModel(wBest, bBest, self.isExpanded), D, L
 
     def __str__(self):
         return 'LogReg\n%s\n%s\n%s\n' % (self.b, self.w, self.min)

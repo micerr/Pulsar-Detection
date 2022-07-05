@@ -6,6 +6,9 @@ def mcol(v):
 def mrow(v):
     return v.reshape((1, v.size))
 
+def vec(M):
+    return M.reshape((-1, 1), order="F")
+
 def logpdf_GAU_ND(X, mu, C):
     M = mu.shape[0]  # dimensions
     pi = numpy.pi

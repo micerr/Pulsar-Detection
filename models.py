@@ -3,7 +3,7 @@ import scipy
 import scipy.special
 
 from Pipeline import Model
-from Tools import logpdf_GAU_ND, mrow, mcol
+from Tools import logpdf_GAU_ND, mrow, mcol, vec
 
 
 class GenerativeModel(Model):
@@ -86,16 +86,28 @@ class TiedMVGModel(GenerativeModel):
 
 class LogRegModel(Model):
 
-    def __init__(self, w, b):
+    def __init__(self, w, b, isExpanded):
         super().__init__()
         self.w = w
         self.b = b
+        self.isExpanded = isExpanded
 
     def transform(self, D, L):
         """
         Here we compute the score vector, is a vector with NumSample elements
         it's computed by :      s(xt) = w.T * xt + b
         """
+        if self.isExpanded:
+            nSamples = D.shape[1]
+            dim = D.shape[0]
+            phix = numpy.zeros((dim ** 2 + dim, nSamples))
+
+            for i in range(nSamples):
+                x = D[:, i:i + 1]
+                phix[:, i:i + 1] = numpy.vstack((vec(numpy.dot(x, x.T)), x))
+
+            D = phix
+
         SPost = numpy.dot(self.w.T, D) + self.b  # (1, NumSamples)
         """
         s[i] > 0 ==> LP[i] = 1 ; else LP[i] = 0
