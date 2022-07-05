@@ -75,3 +75,51 @@ def DCF_min(llr, L, pi=0.5, Cfn=1, Cfp=1):
         if B_norm < B_min:
             B_min = B_norm
     return B_min
+def load_dataset():
+    
+    DTR = []
+    LTR = []
+    DTE = []
+    LTE = []
+    
+    labelDict = {
+        0: 'Mean of the integrated profile',
+        1: 'Standard deviation of the integrated profile',
+        2: 'Excess kurtosis of the integrated profile',
+        3: 'Skewness of the integrated profile',
+        4: 'Mean of the DM-SNR curve',
+        5: 'Standard deviation of the DM-SNR curve',
+        6: 'Excess kurtosis of the DM-SNR curve',
+        7: 'Skewness of the DM-SNR curve',
+    }
+    
+    with open('./dataset/Train.txt', 'r') as trainData:
+        for line in trainData:
+            try:
+                fields = line.split(',')[0:8]
+                fields = mcol(numpy.array([float(i) for i in fields]))
+                label = line.split(',')[-1].strip()
+                DTR.append(fields)
+                LTR.append(label)
+            except:
+                pass
+        
+        DTR = numpy.hstack(DTR)
+        LTR = numpy.array(LTR, dtype=numpy.int32)
+    
+    with open('./dataset/Test.txt', 'r') as testData:
+        for line in testData:
+            try:
+                fields = line.split(',')[0:8]
+                fields = mcol(numpy.array([float(i) for i in fields]))
+                label = line.split(',')[-1].strip()
+                DTE.append(fields)
+                LTE.append(label)
+            except:
+                pass
+            
+        DTE = numpy.hstack(DTE)
+        LTE = numpy.array(LTE, dtype=numpy.int32)
+    
+    return (DTR, LTR), (DTE, LTE), labelDict
+            
