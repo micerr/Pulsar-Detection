@@ -20,3 +20,41 @@ def logpdf_GAU_ND(X, mu, C):
     third_1 = numpy.dot(XC.T, Precision)
     third = -0.5 * (third_1.T * XC).sum(0)
     return first + second + third
+
+def load_dataset():
+    
+    DTR = []
+    LTR = []
+    DTE = []
+    LTE = []
+    
+    with open('./dataset/Train.txt', 'r') as trainData:
+        for line in trainData:
+            try:
+                fields = line.split(',')[0:8]
+                fields = mcol(numpy.array([float(i) for i in fields]))
+                label = line.split(',')[-1].strip()
+                DTR.append(fields)
+                LTR.append(label)
+            except:
+                pass
+        
+        DTR = numpy.hstack(DTR)
+        LTR = numpy.array(LTR, dtype=numpy.int32)
+    
+    with open('./dataset/Test.txt', 'r') as testData:
+        for line in testData:
+            try:
+                fields = line.split(',')[0:8]
+                fields = mcol(numpy.array([float(i) for i in fields]))
+                label = line.split(',')[-1].strip()
+                DTE.append(fields)
+                LTE.append(label)
+            except:
+                pass
+            
+        DTE = numpy.hstack(DTE)
+        LTE = numpy.array(LTE, dtype=numpy.int32)
+    
+    return (DTR, LTR), (DTE, LTE)
+            
