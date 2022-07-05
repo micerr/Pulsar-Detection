@@ -28,6 +28,17 @@ def load_dataset():
     DTE = []
     LTE = []
     
+    labelDict = {
+        0: 'Mean of the integrated profile',
+        1: 'Standard deviation of the integrated profile',
+        2: 'Excess kurtosis of the integrated profile',
+        3: 'Skewness of the integrated profile',
+        4: 'Mean of the DM-SNR curve',
+        5: 'Standard deviation of the DM-SNR curve',
+        6: 'Excess kurtosis of the DM-SNR curve',
+        7: 'Skewness of the DM-SNR curve',
+    }
+    
     with open('./dataset/Train.txt', 'r') as trainData:
         for line in trainData:
             try:
@@ -56,5 +67,5 @@ def load_dataset():
         DTE = numpy.hstack(DTE)
         LTE = numpy.array(LTE, dtype=numpy.int32)
     
-    return (DTR, LTR), (DTE, LTE)
+    return (DTR, LTR), (DTE, LTE), labelDict
             
