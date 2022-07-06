@@ -108,23 +108,24 @@ class LogRegModel(Model):
 
 class SVMModel(Model):
 
-    def __init__(self, a, K, kernel, DTR, LTR):
+    def __init__(self, a, K, kernel, isNoKern, DTR, LTR):
         super().__init__()
         self.a = mcol(a)
         self.K = K
         self.kernel = kernel
+        self.isNoKern = isNoKern
         self.DTR = DTR
         self.LTR = LTR
 
     def transform(self, D, L):
         N = D.shape[1]
-        D = numpy.vstack((D, numpy.full((1, N), self.K)))
+        """
+        If we are using a non-linear SVM kernel the modified version is implicitly done inside the
+        calculus of the kernel, adding +K^2 factor, so we don't need to redo it again
+        Here I add the additional K feature only if the kernel is linear
+        """
+        D = numpy.vstack((D, numpy.full((1, N), self.K))) if self.isNoKern else D
         Z = mcol((self.LTR * 2.0) - 1.0)  # 0 => -1 ; 1 => 1
-        """
-        this is a solution for the modified problem
-        D = [[D], [K]]
-        w = [[w], [b]]
-        """
         ## TODO
         """
         TODO
@@ -134,15 +135,20 @@ class SVMModel(Model):
         processing step, i.e. score calibration, or cross-validation to select the optimal threshold for a
         specific application. Below we simply use threshold 0 and compute the corresponding accuracy.
         """
+        X = self.DTR
+        if not self.isNoKern:
+            """
+            If we are doing a non linear SVM, the kernel MUST be computed with the normal Dataset
+            so here I'm removing the additional K feature
+            N.B.
+                Internally of the non linear kernels i.e. Poly or RBF, is added a constant eps = K^2 
+                in order to regularize the bias that here we are removing  
+            """
+            X = X[:-1, :]
         """
         Here I compute the score with the following formula
         s(xt) = sum(from 1 to n) of[ a_i * z_i * k(x_i, x_t)]
         I do everything with broadcasting
-        a = (nTrain, 1) ; mcol(Z) = (nTrain, 1)
-        k(DTR, D) = (NTrain, NTest) 
-        in order to broadcast the multiplication of a*z to the result matrix of kernel I transpose
-        the kernel
-        the sum by columns to receive a colum vector of scores
         """
-        S = numpy.dot((self.a * Z).T, self.kernel(self.DTR, D))
+        S = numpy.dot((self.a * Z).T, self.kernel(X, D))
         return S

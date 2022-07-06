@@ -38,6 +38,31 @@ if __name__ == "__main__":
     D, L = load_iris_binary()
     (DTR, LTR), (DTE, LTE) = split_db_2to1(D, L)
 
+    print("Logist Regression")
+    for lambd in [10**-6, 10**-3, 10**-1, 10**0]:
+        lr = LogisticRegression()
+        pipe = Pipeline()
+        lr.setLambda(lambd)
+        pipe.addStages([lr])
+        model = pipe.fit(DTR, LTR)
+        s = model.transform(DTE, LTE)
+        pred = assign_label_bin(s)
+        acc = accuracy(pred, LTE)
+        print("Error:\t", (1 - acc) * 100, "%")
+
+    print("Logist Regression Expanded")
+    for lambd in [10 ** -6, 10 ** -3, 10 ** -1, 10 ** 0]:
+        lr = LogisticRegression()
+        pipe = Pipeline()
+        lr.setLambda(lambd)
+        lr.setExpanded(True)
+        pipe.addStages([lr])
+        model = pipe.fit(DTR, LTR)
+        s = model.transform(DTE, LTE)
+        pred = assign_label_bin(s)
+        acc = accuracy(pred, LTE)
+        print("Error:\t", (1 - acc) * 100, "%")
+
     print("Normal Kernel")
     for K in [1, 10]:
         for C in [0.1, 1.0, 10.0]:
@@ -82,6 +107,7 @@ if __name__ == "__main__":
             acc = accuracy(pred, LTE)
             print("Error:\t", (1 - acc) * 100, "%")
 
+    """
     lrLinear = LogisticRegression()
     lrLinear.setLambda(0.1)
     lrQuadratic = LogisticRegression()
@@ -111,4 +137,5 @@ if __name__ == "__main__":
     bCost = DCF_norm_bin(llr, LTE)
     minCost = DCF_min(llr, LTE)
     print("DCF norm:\t", bCost, "\nDCF min:\t", minCost, "\n")
+    """
 

@@ -239,6 +239,8 @@ class LogisticRegression(PipelineStage):
             factr=1.0  # Improve the precision
         )
 
+        # print("J(w,b): ", minimum)
+
         wBest = mcol(bestParam[0:(self.dim if not self.isExpanded else (self.dim**2 + self.dim))])  # (D, 1)
         bBest = bestParam[-1]  # scalar
         
@@ -269,6 +271,7 @@ class SVM(PipelineStage):
         # this is a formula in order to work also with matrices
         # x_i.T * x_j
         self.kernel = (lambda X_i, X_j: numpy.dot(X_i.T, X_j))
+        self.isNoKern = True
         
     def setK(self, K):
         self.K = K
@@ -281,14 +284,38 @@ class SVM(PipelineStage):
         polynomial kernel of degree d
         k(x_1, x_2) = (x_1.T * x_2 + c)^d
         """
-        self.kernel = (lambda X_i, X_j: numpy.power(numpy.dot(X_i.T, X_j) + c, d) + self.K)
+        self.isNoKern = False
+        self.kernel = (lambda X_i, X_j: numpy.power(numpy.dot(X_i.T, X_j) + c, d) + self.K**2)
 
     def setRBFKernel(self, g):
         """
         Radial basis function kernel
         K(x_1, x_2) = exp(-g*||x_1-x_2||^2)
         """
-        self.kernel = (lambda X_i, X_j: numpy.exp(-g * numpy.linalg.norm(X_i-X_j)**2) + self.K)
+        self.isNoKern = False
+
+        def RBFKernel(X_i, X_j):
+            """
+            The principal problem here is that X_i  and X_j don't have the same shape
+            So the difference has some problems
+            Here we do a trick in order to do it without loops
+            ...Solution taken from Internet
+            """
+            a = numpy.repeat(X_i, X_j.shape[1], axis=1)
+            b = numpy.tile(X_j, X_i.shape[1])
+            c = (numpy.linalg.norm(a - b, axis=0) ** 2).reshape((X_i.shape[1], X_j.shape[1]))
+            return numpy.exp(-g * c) + self.K**2
+
+        self.kernel = (lambda X_i, X_j: RBFKernel(X_i, X_j))
+
+    def setNoKern(self):
+        """
+        default kernel is just a dot product
+        this is a formula in order to work also with matrices
+        x_i.T * x_j
+        """
+        self.isNoKern = True
+        self.kernel = (lambda X_i, X_j: numpy.dot(X_i.T, X_j))
 
     def compute_H(self):
         """
@@ -297,7 +324,17 @@ class SVM(PipelineStage):
         numpy.dot(Z.T, Z) return the a matrix (N, N) in which elements are: H_ij = z_i * z_j
         Use the kernel passed thought setKernel or the default to compute k(x_i, x_j)
         """
-        return numpy.dot(self.Z.T, self.Z) * self.kernel(self.D, self.D)
+        X = self.D
+        if not self.isNoKern:
+            """
+            If we are doing a non linear SVM, the kernel MUST be computed with the normal Dataset
+            so here I'm removing the additional K feature
+            N.B.
+                Internally of the non linear kernels i.e. Poly or RBF, is added a constant eps = K^2 
+                in order to regularize the bias that here we are removing  
+            """
+            X = X[:-1, :]
+        return numpy.dot(self.Z.T, self.Z) * self.kernel(X, X)
 
     def L_Dual(self, a):
         """
@@ -366,17 +403,18 @@ class SVM(PipelineStage):
             # The gradient is directly computed inside the L_Dual funct
             bounds=bounds,
             # Those are the bounds for the soft-margin solution
-            factr=0.0,
+            factr=1.0,
             # improve the precision
             maxiter=10**9, maxfun=10**9  # increase the max number of iterations
             # iprint=1
         )
 
         # CHECK can be removed to save time, is used to control if everything is done well
-        wBest = self.getWeightsFromDual(aBest)  # wBest = [[w], [b]]
-        print("Duality GAP: ", self.L_primal(wBest) + self.L_Dual(aBest)[0])
+        # TODO this doesn't work with non-linear kernel, idk why D:
+        # wBest = self.getWeightsFromDual(aBest)  # wBest = [[w], [b]]
+        # print("Duality GAP: ", self.L_primal(wBest) + self.L_Dual(aBest)[0])
 
-        return SVMModel(aBest, self.K, self.kernel, self.D, L), D, L
+        return SVMModel(aBest, self.K, self.kernel, self.isNoKern, self.D, L), D, L
 
     def __str__(self):
         return "SVM %s" % ("hard-margin" if self.C == 0 else "soft-margin")
