@@ -105,3 +105,44 @@ class LogRegModel(Model):
 
         llrPost = numpy.dot(self.w.T, D) + self.b  # (1, NumSamples)
         return llrPost
+
+class SVMModel(Model):
+
+    def __init__(self, a, K, kernel, DTR, LTR):
+        super().__init__()
+        self.a = mcol(a)
+        self.K = K
+        self.kernel = kernel
+        self.DTR = DTR
+        self.LTR = LTR
+
+    def transform(self, D, L):
+        N = D.shape[1]
+        D = numpy.vstack((D, numpy.full((1, N), self.K)))
+        Z = mcol((self.LTR * 2.0) - 1.0)  # 0 => -1 ; 1 => 1
+        """
+        this is a solution for the modified problem
+        D = [[D], [K]]
+        w = [[w], [b]]
+        """
+        ## TODO
+        """
+        TODO
+        The SVM decision rule is to assign a pattern to class HT if the score is greater than 0, and to
+        HF otherwise. However, SVM decisions are not probabilistic, and are not able to account for
+        different class priors and mis-classification costs. Bayes decisions thus require either a score post-
+        processing step, i.e. score calibration, or cross-validation to select the optimal threshold for a
+        specific application. Below we simply use threshold 0 and compute the corresponding accuracy.
+        """
+        """
+        Here I compute the score with the following formula
+        s(xt) = sum(from 1 to n) of[ a_i * z_i * k(x_i, x_t)]
+        I do everything with broadcasting
+        a = (nTrain, 1) ; mcol(Z) = (nTrain, 1)
+        k(DTR, D) = (NTrain, NTest) 
+        in order to broadcast the multiplication of a*z to the result matrix of kernel I transpose
+        the kernel
+        the sum by columns to receive a colum vector of scores
+        """
+        S = numpy.dot((self.a * Z).T, self.kernel(self.DTR, D))
+        return S

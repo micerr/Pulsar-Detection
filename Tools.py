@@ -75,6 +75,7 @@ def DCF_min(llr, L, pi=0.5, Cfn=1, Cfp=1):
         if B_norm < B_min:
             B_min = B_norm
     return B_min
+
 def load_dataset():
     
     DTR = []

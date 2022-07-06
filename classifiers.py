@@ -2,8 +2,8 @@ import numpy
 import scipy.optimize
 
 from Pipeline import PipelineStage
-from Tools import mcol, vec
-from models import MVGModel, TiedMVGModel, LogRegModel
+from Tools import mcol, vec, mrow
+from models import MVGModel, TiedMVGModel, LogRegModel, SVMModel
 
 
 class MVG(PipelineStage):
@@ -235,7 +235,8 @@ class LogisticRegression(PipelineStage):
             self.J,
             numpy.zeros((self.dim + 1) if not self.isExpanded else (self.dim**2 + self.dim + 1)),
             # the starting point is not important because the function is convex
-            approx_grad=True
+            approx_grad=True,
+            factr=1.0  # Improve the precision
         )
 
         wBest = mcol(bestParam[0:(self.dim if not self.isExpanded else (self.dim**2 + self.dim))])  # (D, 1)
@@ -248,4 +249,135 @@ class LogisticRegression(PipelineStage):
         return LogRegModel(wBest, bBest, self.isExpanded), D, L
 
     def __str__(self):
-        return 'LogReg'
+        return 'LogReg %s' % ("Quadratic" if self.isExpanded else "Linear")
+    
+class SVM(PipelineStage):
+
+    polyKernel = (lambda X_i, X_j: numpy.dot(X_i.T, X_j))
+    RBFKernel = (lambda X_i, X_j: numpy.dot(X_i.T, X_j))
+
+    def __init__(self):
+        super().__init__()
+        self.C = 0  # C = 0 => Hard-Margin SVM
+        self.H = None  # (N, N)
+        self.Z = None  # (1, N)
+        self.D = None  # (M, N)
+        # As K becomes larger, the effects of regularizing b become weaker. However, as K becomes larger, the
+        # dual problem also becomes harder to solve (i.e. the algorithm may require many additional iterations).
+        self.K = 1  # Default 1
+        # default kernel is just a dot product
+        # this is a formula in order to work also with matrices
+        # x_i.T * x_j
+        self.kernel = (lambda X_i, X_j: numpy.dot(X_i.T, X_j))
+        
+    def setK(self, K):
+        self.K = K
+
+    def setC(self, C):
+        self.C = C
+
+    def setPolyKernel(self, c, d):
+        """
+        polynomial kernel of degree d
+        k(x_1, x_2) = (x_1.T * x_2 + c)^d
+        """
+        self.kernel = (lambda X_i, X_j: numpy.power(numpy.dot(X_i.T, X_j) + c, d) + self.K)
+
+    def setRBFKernel(self, g):
+        """
+        Radial basis function kernel
+        K(x_1, x_2) = exp(-g*||x_1-x_2||^2)
+        """
+        self.kernel = (lambda X_i, X_j: numpy.exp(-g * numpy.linalg.norm(X_i-X_j)**2) + self.K)
+
+    def compute_H(self):
+        """
+        H_ij = z_i * z_j * x_i.T * x_j.T
+        This function compute this calculus for all elements i,j inside D, by BROADCASTING
+        numpy.dot(Z.T, Z) return the a matrix (N, N) in which elements are: H_ij = z_i * z_j
+        Use the kernel passed thought setKernel or the default to compute k(x_i, x_j)
+        """
+        return numpy.dot(self.Z.T, self.Z) * self.kernel(self.D, self.D)
+
+    def L_Dual(self, a):
+        """
+        Just following the formula of the dual problem in Matrix form
+        Here is used the modified version
+        D = [[D], [K]]
+        w = [[w], [b]]
+        Returns also the gradient for best performance
+        """
+        a = mcol(a)
+        """
+        Compute the formula for the lagrangian
+        J^D(a) = - 1/2*a.T*H*a + a.T*1
+        return a lagrangian and gradient
+        """
+        Ha = numpy.dot(self.H, a)
+        ones = numpy.ones(a.shape)
+        res = 0.5 * numpy.dot(a.T, Ha) - numpy.dot(a.T, ones)
+        '''
+        Compute the gradient of Lagrangian
+        Gradient = - H*a + 1        
+        '''
+        gradient = Ha - ones
+        return res, gradient.ravel()
+
+    def getWeightsFromDual(self, a):
+        """
+        Reconstruct w (Primal Solution) from a (Dual solution)
+        We do not need to reconstruct b, because we are using the modified version
+        D = [[D], [K]]
+        w = [[w], [b]]
+
+        Here I'm doing sum(i = 1 to n) of a_i * z_i * x_i
+        Everything is done by broadcasting, so we do for all sample in a single shot
+        Z must be Transposed (colum vector)
+        """
+        return mcol(numpy.sum(a * self.Z * self.D, 1))
+
+    def L_primal(self, w):
+        """
+        This function is used only for checks
+        We want that the dual solution to be the most as close as possible to the primal
+        Here I'm using the modified version, so b is inside w
+        D = [[D], [K]]
+        w = [[w], [b]]
+        """
+        loss = 1 - mrow(self.Z) * numpy.dot(w.T, self.D)  # (1, N)
+        loss[loss <= 0] = 0  # max(0, hinge loss)
+        return 0.5 * numpy.linalg.norm(w) ** 2 + self.C * numpy.sum(loss, 1)
+
+    def compute(self, model, D, L):
+        """
+        this is a solution for the modified problem
+        D = [[D], [K]]
+        w = [[w], [b]]
+        """
+        N = D.shape[1]  # Number of samples
+        self.D = numpy.vstack((D, numpy.full((1, N), self.K)))
+        self.Z = mrow((L * 2.0) - 1.0)  # 0 => -1 ; 1 => 1
+        self.H = self.compute_H()
+        bounds = [(0, self.C if self.C != 0 else None) for i in range(N)]
+
+        aBest, minimum, d = scipy.optimize.fmin_l_bfgs_b(
+            self.L_Dual,
+            numpy.zeros(N),
+            # The gradient is directly computed inside the L_Dual funct
+            bounds=bounds,
+            # Those are the bounds for the soft-margin solution
+            factr=0.0,
+            # improve the precision
+            maxiter=10**9, maxfun=10**9  # increase the max number of iterations
+            # iprint=1
+        )
+
+        # CHECK can be removed to save time, is used to control if everything is done well
+        wBest = self.getWeightsFromDual(aBest)  # wBest = [[w], [b]]
+        print("Duality GAP: ", self.L_primal(wBest) + self.L_Dual(aBest)[0])
+
+        return SVMModel(aBest, self.K, self.kernel, self.D, L), D, L
+
+    def __str__(self):
+        return "SVM %s" % ("hard-margin" if self.C == 0 else "soft-margin")
+    
