@@ -21,6 +21,21 @@ def logpdf_GAU_ND(X, mu, C):
     third = -0.5 * (third_1.T * XC).sum(0)
     return first + second + third
 
+def center_data(D):
+    D = D - mcol(D.mean(1))
+    return D
+
+def cov_mat(D):
+    DC = center_data(D)
+    C = numpy.dot(DC, DC.T) / float(D.shape[1])
+    return C
+
+def pearson_correlation_mat(D):
+    C = cov_mat(D)
+    sqrtV = mcol(numpy.diag(C)**(1/2))
+    R = C * numpy.dot(sqrtV**-1, (sqrtV**-1).T)
+    return R
+
 def confusion_matrix(P, L):
     # P => Predictions
     # L => Labels
