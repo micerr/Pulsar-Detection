@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
 import numpy
 
 from Pipeline import PipelineStage
-from Tools import confusion_matrix, DCF_norm_bin, DCF_min
+from Tools import confusion_matrix, DCF_norm_bin, DCF_min, pearson_correlation_mat
 
 
 class Histogram(PipelineStage):
@@ -25,9 +26,9 @@ class Histogram(PipelineStage):
             plt.figure()
             plt.xlabel(dim if len(self.dimensions) == 0 else self.dimensions[dim])
             for k in range(K):
-                plt.hist(D[dim, L == k], bins=10, density=True, alpha=0.4, label=(k if len(self.labels) == 0 else self.labels[k]))
+                plt.hist(D[dim, L == k], bins=100, density=True, alpha=0.4, label=(k if len(self.labels) == 0 else self.labels[k]))
             plt.legend()
-        plt.show()
+            plt.show()
         return model, D, L
 
     def __str__(self):
@@ -110,3 +111,17 @@ def print_DCFs(llrs, L, descriptions):
     plt.xlim([-3, 3])
     plt.legend()
     plt.show()
+
+def print_pearson_correlation_mat(D, title):
+    dim = D.shape[0]
+    plt.figure(figsize=(dim, dim))
+    corrMatr = pearson_correlation_mat(D)
+    heatmap = sns.heatmap(corrMatr, vmin=-1, vmax=1, annot=True, cmap='Reds')
+    heatmap.set_title('Pearson correlation matrix '+title, fontdict={'fontsize': 12}, pad=12)
+    plt.show()
+
+def print_pearson_correlation_matrices(D, L):
+    K = L.max() + 1
+    print_pearson_correlation_mat(D, "whole data")
+    for k in range(K):
+        print_pearson_correlation_mat(D[:, L == k], str(k))

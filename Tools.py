@@ -32,6 +32,21 @@ def logpdf_GMM(X, gmm):
         S[g:g+1, :] = logpdf_GAU_ND(X, mu, C)  # log Gaussian
         S[g, :] += numpy.log(w)  # log join density
     return scipy.special.logsumexp(S, axis=0)  # marginal density == density of GMM
+    
+def center_data(D):
+    D = D - mcol(D.mean(1))
+    return D
+
+def cov_mat(D):
+    DC = center_data(D)
+    C = numpy.dot(DC, DC.T) / float(D.shape[1])
+    return C
+
+def pearson_correlation_mat(D):
+    C = cov_mat(D)
+    sqrtV = mcol(numpy.diag(C)**(1/2))
+    R = C * numpy.dot(sqrtV**-1, (sqrtV**-1).T)
+    return R
 
 def confusion_matrix(P, L):
     # P => Predictions

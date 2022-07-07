@@ -1,13 +1,11 @@
 import numpy
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from Data.GMM_load import load_gmm
 from Pipeline import Pipeline, CrossValidator
 from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM
 from featureExtraction import PCA, LDA
 from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression, SVM
-from plots import Histogram, Scatter, print_DCFs, print_ROCs
+from plots import Histogram, Scatter, print_DCFs, print_ROCs, print_pearson_correlation_matrices
 
 def load_iris_binary():
     import sklearn.datasets
@@ -16,6 +14,10 @@ def load_iris_binary():
     L = L[L != 0]  # We remove setosa from L
     L[L == 2] = 0  # We assign label 0 to virginica (was label 2)
     return D, L
+
+def load_iris():
+    import sklearn.datasets
+    return sklearn.datasets.load_iris()['data'].T, sklearn.datasets.load_iris()['target']
 
 def split_db_2to1(D, L, seed=0):
     nTrain = int(D.shape[1]*2.0/3.0)
@@ -36,7 +38,19 @@ def split_db_2to1(D, L, seed=0):
 
 if __name__ == "__main__":
 
-    # (DTR, LTR), (DTE, LTE), labelDict = load_dataset()
+    (DTR, LTR), (DTE, LTE), labelDict = load_dataset()
+    print_pearson_correlation_matrices(DTR, LTR)
+    pipe = Pipeline()
+    pca = PCA()
+    pca.setDimension(5)
+    pipe.addStages([Histogram(), pca, Histogram()])
+    pipe.fit(DTR, LTR, True)
+
+    pipe = Pipeline()
+    lda = LDA()
+    lda.setDimension(1)
+    pipe.addStages([pca, lda, Histogram()])
+    pipe.fit(DTR, LTR, True)
 
     D, L = load_iris_binary()
     (DTR, LTR), (DTE, LTE) = split_db_2to1(D, L)
