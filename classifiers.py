@@ -418,4 +418,14 @@ class SVM(PipelineStage):
 
     def __str__(self):
         return "SVM %s" % ("hard-margin" if self.C == 0 else "soft-margin")
-    
+
+class GMM(PipelineStage):
+
+    def __init__(self):
+        super().__init__()
+
+    def compute(self, model, D, L):
+        pass
+
+    def __str__(self):
+        return "GMM"

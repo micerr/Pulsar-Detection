@@ -1,7 +1,10 @@
 import numpy
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+from Data.GMM_load import load_gmm
 from Pipeline import Pipeline, CrossValidator
-from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min
+from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM
 from featureExtraction import PCA, LDA
 from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression, SVM
 from plots import Histogram, Scatter, print_DCFs, print_ROCs
@@ -106,6 +109,15 @@ if __name__ == "__main__":
             pred = assign_label_bin(s)
             acc = accuracy(pred, LTE)
             print("Error:\t", (1 - acc) * 100, "%")
+
+    X = numpy.load("./Data/GMM_data_4D.npy")
+    gmm = load_gmm("./Data/GMM_4D_3G_init.json")
+    logDens = numpy.load("./Data/GMM_4D_3G_init_ll.npy")
+    myRes = logpdf_GMM(X, gmm)
+    print("Check result: ", numpy.sum(myRes-logDens))
+
+
+
 
     """
     lrLinear = LogisticRegression()

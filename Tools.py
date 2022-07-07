@@ -1,4 +1,6 @@
 import numpy
+import scipy.special
+
 
 def mcol(v):
     return v.reshape((v.size, 1))
@@ -20,6 +22,16 @@ def logpdf_GAU_ND(X, mu, C):
     third_1 = numpy.dot(XC.T, Precision)
     third = -0.5 * (third_1.T * XC).sum(0)
     return first + second + third
+
+def logpdf_GMM(X, gmm):
+    # gmm = [(w1, mu1, C1), (w2, mu2, C2), ...]
+    M = len(gmm)
+    N = X.shape[1]
+    S = numpy.zeros((M, N))
+    for g, (w, mu, C) in enumerate(gmm):
+        S[g:g+1, :] = logpdf_GAU_ND(X, mu, C)  # log Gaussian
+        S[g, :] += numpy.log(w)  # log join density
+    return scipy.special.logsumexp(S, axis=0)  # marginal density == density of GMM
 
 def confusion_matrix(P, L):
     # P => Predictions
