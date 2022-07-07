@@ -1,8 +1,9 @@
 import numpy
+import matplotlib.pyplot as plt
 
 from Data.GMM_load import load_gmm
 from Pipeline import Pipeline, CrossValidator
-from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM
+from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow
 from featureExtraction import PCA, LDA
 from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression, SVM
 from plots import Histogram, Scatter, print_DCFs, print_ROCs, print_pearson_correlation_matrices
@@ -37,6 +38,7 @@ def split_db_2to1(D, L, seed=0):
     return (DTR, LTR), (DTE, LTE)
 
 if __name__ == "__main__":
+    """
 
     (DTR, LTR), (DTE, LTE), labelDict = load_dataset()
     print_pearson_correlation_matrices(DTR, LTR)
@@ -51,6 +53,7 @@ if __name__ == "__main__":
     lda.setDimension(1)
     pipe.addStages([pca, lda, Histogram()])
     pipe.fit(DTR, LTR, True)
+    """
 
     D, L = load_iris_binary()
     (DTR, LTR), (DTE, LTE) = split_db_2to1(D, L)
@@ -130,8 +133,39 @@ if __name__ == "__main__":
     myRes = logpdf_GMM(X, gmm)
     print("Check result: ", numpy.sum(myRes-logDens))
 
+    # X = numpy.load("./Data/GMM_data_1D.npy")
+    # gmm = load_gmm("./Data/GMM_1D_3G_init.json")
+    # logDens = numpy.load("./Data/GMM_1D_3G_init_ll.npy")
+    # myRes = logpdf_GMM(X, gmm)
+    # print("Check result: ", numpy.sum(myRes - logDens))
 
+    bestDensity = load_gmm("./Data/GMM_4D_3G_EM.json")
+    myBest = EM(X, gmm)
+    avg1 = numpy.mean(logpdf_GMM(X, bestDensity))
+    avg2 = numpy.mean(logpdf_GMM(X, myBest))
+    print("Error avg log-likelihood: ", avg1, avg2, avg1-avg2)
+    errorW = 0
+    errorMU = 0
+    errorC = 0
+    for g in range(len(bestDensity)):
+        errorW += bestDensity[g][0] - myBest[g][0]
+        errorMU += numpy.sum(bestDensity[g][1] - myBest[g][1])
+        errorC += numpy.sum(bestDensity[g][2] - myBest[g][2])
+    print("Error weights: ", errorW, "\nError mean: ", errorMU, "\nError Cov: ", errorC)
 
+    # plt.figure()
+    # plt.hist(X.ravel(), bins=50, density=True)
+    # XPlot = numpy.linspace(-8, 12, 1000)
+    # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), myBest)))
+    # plt.legend()
+    # plt.show()
+
+    # plt.figure()
+    # plt.hist(X.ravel(), bins=50, density=True)
+    # XPlot = numpy.linspace(-8, 12, 1000)
+    # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), bestDensity)))
+    # plt.legend()
+    # plt.show()
 
     """
     lrLinear = LogisticRegression()

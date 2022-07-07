@@ -1,7 +1,6 @@
 import numpy
 import scipy.special
 
-
 def mcol(v):
     return v.reshape((v.size, 1))
 
@@ -29,9 +28,63 @@ def logpdf_GMM(X, gmm):
     N = X.shape[1]
     S = numpy.zeros((M, N))
     for g, (w, mu, C) in enumerate(gmm):
-        S[g:g+1, :] = logpdf_GAU_ND(X, mu, C)  # log Gaussian
-        S[g, :] += numpy.log(w)  # log join density
+        S[g:g+1, :] = logpdf_GAU_ND(X, mu, C)  # log Gaussian (Cluster component) == density of MVG
+        S[g, :] += numpy.log(w)  # log join density (add the log prior density)
     return scipy.special.logsumexp(S, axis=0)  # marginal density == density of GMM
+
+def EM(X, gmm):
+    # gmm = [(w1, mu1, C1), (w2, mu2, C2), ...]
+    M = len(gmm)  # Num clusters
+    N = X.shape[1]  # Num samples
+    D = X.shape[0]  # Num features
+
+    def stepE(gmm):
+        S = numpy.zeros((M, N))
+        for g, (w, mu, C) in enumerate(gmm):
+            # TODO Implement logpdf_GAU_ND for multiple Clusters, it will improve the efficiency
+            S[g:g+1, :] = logpdf_GAU_ND(X, mu, C)  # log Gaussian (Cluster component) == density of MVG
+            S[g, :] += numpy.log(w)  # log join density (add the log prior density)
+        marginalS = scipy.special.logsumexp(S, axis=0)  # marginal density == density of GMM
+        return numpy.exp(S - marginalS)  # responsibilities (M, N)
+
+    def stepM(r):
+        Z = numpy.sum(r, axis=1)  # (M, 1) Zero Order Statistic
+        F = numpy.dot(r, X.T)  # (M, D) First Order Statistic
+        # FFor = numpy.zeros((M, D))
+        # for g in range(M):
+        #     FFor[g:g+1, :] = numpy.sum(r[g]*X, axis=1)
+        # TODO why the compact form doesn't work??
+        Sec = numpy.dot((numpy.tile(r, D).reshape(M * D, N) * numpy.repeat(X, M, axis=0)).reshape(M, D, N),
+                        X.T)  # (M, D, D)
+        SecFor = numpy.zeros((M, D, D))
+        for g in range(M):
+            SecFor[g:g+1, :, :] = numpy.dot(r[g, :] * X, X.T)
+
+        MU = F / mcol(Z)  # (M, D) for each cluster there is a mean
+        # MUCOV = numpy.zeros((M, D, D))
+        # for g in range(M):
+        #     MUCOV[g:g+1, :] = numpy.dot(mcol(MU[g, :]), mrow(MU[g, :]))
+        # SIGFor = SecFor / Z.reshape(M, 1, 1) - MUCOV
+        SIG = SecFor / Z.reshape(M, 1, 1) - (mrow(MU).T.reshape(M, D, 1) * MU.reshape(M, 1, D))  # (M, D, D)
+        W = Z / N  # (M, 1) for each cluster there is a weight
+        return [(W[g], MU[g], SIG[g]) for g in range(M)]
+
+    def stopCriteria(gmm, newGMM, delta):
+        old = numpy.mean(logpdf_GMM(X, gmm))
+        new = numpy.mean(logpdf_GMM(X, newGMM))
+        print("Old: ", old, "New: ", new)
+        if new < old:
+            print("PANIC!!!!!!!")
+        return new - old < delta
+
+    while True:
+        r = stepE(gmm)
+        newGMM = stepM(r)
+        if stopCriteria(gmm, newGMM, 10**-6):
+            break
+        gmm = newGMM
+
+    return newGMM
     
 def center_data(D):
     D = D - mcol(D.mean(1))
