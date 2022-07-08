@@ -85,6 +85,35 @@ def EM(X, gmm):
         gmm = newGMM
 
     return newGMM
+
+def LBG(gmm, alpha):
+    # gmm = [(w1, mu1, C1), (w2, mu2, C2), ...]
+    newGMM = []
+    for g, (w, mu, C) in enumerate(gmm):
+        """
+        we are displacing the new components along the direction of maximum variance, using a
+        step that is proportional to the standard deviation of the component we are splitting.
+        """
+        U, s, Vh = numpy.linalg.svd(C)  # U := eigenvector ; s := eigenvalue
+        d = U[:, 0:1] * s[0] ** 0.5 * alpha  # we take the eigenvector with the maximum variance
+        newGMM.append((w/2, mcol(mu)+d, C))
+        newGMM.append((w/2, mcol(mu)-d, C))
+    return newGMM
+
+def LBG_x2_Cluster(X, gmm, alpha, i):
+    """
+    Usually the starting point is:
+    w = 1
+    mu = empirical mean of the dataset
+    C = empirical covariance matrix of the dataset
+
+    But they are Hyper parameters (The problem is not a convex one)
+    Alpha is a H-parameter too
+    """
+    for i in range(i):
+        gmm = LBG(gmm, alpha)  # G -> 2G
+        gmm = EM(X, gmm)  # Apply EM algorithm
+    return gmm  # gmm * 2^i Clusters
     
 def center_data(D):
     D = D - mcol(D.mean(1))

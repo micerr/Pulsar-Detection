@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 
 from Data.GMM_load import load_gmm
 from Pipeline import Pipeline, CrossValidator
-from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow
+from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
+    LBG_x2_Cluster
 from featureExtraction import PCA, LDA
 from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression, SVM
 from plots import Histogram, Scatter, print_DCFs, print_ROCs, print_pearson_correlation_matrices
@@ -163,6 +164,34 @@ if __name__ == "__main__":
     # plt.figure()
     # plt.hist(X.ravel(), bins=50, density=True)
     # XPlot = numpy.linspace(-8, 12, 1000)
+    # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), bestDensity)))
+    # plt.legend()
+    # plt.show()
+
+    X = numpy.load("./Data/GMM_data_4D.npy")
+    mu = numpy.mean(X, axis=1)
+    XC = X - mcol(mu)
+    C = numpy.dot(XC, XC.T)/X.shape[1]
+    GMM_1 = [(1.0, mu, C)]
+
+    myBest = LBG_x2_Cluster(X, GMM_1, 0.1, 2)
+    bestDensity = load_gmm("./Data/GMM_4D_4G_EM_LBG.json")
+    avg1 = numpy.mean(logpdf_GMM(X, bestDensity))
+    avg2 = numpy.mean(logpdf_GMM(X, myBest))
+    print("Error avg log-likelihood: ", avg1, avg2, avg1 - avg2)
+    errorW = 0
+    errorMU = 0
+    errorC = 0
+    for g in range(len(bestDensity)):
+        errorW += bestDensity[g][0] - myBest[g][0]
+        errorMU += numpy.sum(bestDensity[g][1] - myBest[g][1])
+        errorC += numpy.sum(bestDensity[g][2] - myBest[g][2])
+    print("Error weights: ", errorW, "\nError mean: ", errorMU, "\nError Cov: ", errorC)
+
+    # plt.figure()
+    # plt.hist(X.ravel(), bins=50, density=True)
+    # XPlot = numpy.linspace(-8, 12, 1000)
+    # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), myBest)))
     # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), bestDensity)))
     # plt.legend()
     # plt.show()
