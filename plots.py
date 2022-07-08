@@ -10,6 +10,11 @@ class Histogram(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.dpi = None
+        self.name = None
+        self.save = False
+        self.title = ""
+        self.perBin = 15
         self.labels = []
         self.dimensions = []
 
@@ -19,15 +24,30 @@ class Histogram(PipelineStage):
     def setDimensions(self, dimensions):
         self.dimensions = dimensions
 
+    def setElemPerBin(self, n):
+        self.perBin = n
+
+    def setTitle(self, title):
+        self.title = title
+
+    def setSaveDirectoryDPI(self, directory, name, ext, dpi):
+        self.save = True
+        self.name = directory + "/" + name + "." + ext
+        self.dpi = dpi
+
     def compute(self, model, D, L):
         K = L.max() + 1
         dims = D.shape[0]
+        N = D.shape[1]
         for dim in range(dims):
             plt.figure()
+            plt.title(self.title)
             plt.xlabel(dim if len(self.dimensions) == 0 else self.dimensions[dim])
             for k in range(K):
-                plt.hist(D[dim, L == k], bins=100, density=True, alpha=0.4, label=(k if len(self.labels) == 0 else self.labels[k]))
+                plt.hist(D[dim, L == k], bins=round(N/self.perBin), density=True, alpha=0.4, label=(k if len(self.labels) == 0 else self.labels[k]))
             plt.legend()
+            if self.save:
+                plt.savefig(self.name, dpi=self.dpi)
             plt.show()
         return model, D, L
 
@@ -38,14 +58,26 @@ class Scatter(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.save = False
+        self.dpi = None
+        self.name = None
         self.labels = []
         self.dimensions = []
+        self.title = ""
 
     def setLabels(self, labels):
         self.labels = labels
 
     def setDimensions(self, dimensions):
         self.dimensions = dimensions
+
+    def setTitle(self, title):
+        self.title = title
+
+    def setSaveDirectoryDPI(self, directory, name, ext, dpi):
+        self.save = True
+        self.name = directory+"/"+name+"."+ext
+        self.dpi = dpi
 
     def compute(self, model, D, L):
         K = L.max() + 1
@@ -55,12 +87,15 @@ class Scatter(PipelineStage):
                 if attri >= attrj:
                     continue
                 plt.figure()
+                plt.title(self.title)
                 plt.xlabel(attri if len(self.dimensions) == 0 else self.dimensions[attri])
                 plt.ylabel(attrj if len(self.dimensions) == 0 else self.dimensions[attrj])
                 for k in range(K):
                     plt.scatter(D[attri, L == k], D[attrj, L == k], label=(k if len(self.labels) == 0 else self.labels[k]))
                 plt.legend()
-            plt.show()
+                if self.save:
+                    plt.savefig(self.name, dpi=self.dpi)
+                plt.show()
         return model, D, L
 
     def __str__(self):
