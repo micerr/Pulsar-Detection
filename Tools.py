@@ -181,6 +181,19 @@ def cov_mat(D):
     C = numpy.dot(DC, DC.T) / float(D.shape[1])
     return C
 
+def within_cov_mat(D, L):
+    K = L.max() + 1
+    nSamples = D.shape[1]
+
+    Sw = 0
+    for i in range(K):
+        DCl = D[:, L == i]  # take only samples of the class-i
+        mu = mcol(DCl.mean(1))  # compute the mean of the class data
+        DClC = DCl - mu  # center the class data
+        Sw += numpy.dot(DClC, DClC.T)
+    Sw = Sw / nSamples
+    return Sw
+
 def pearson_correlation_mat(D):
     C = cov_mat(D)
     sqrtV = mcol(numpy.diag(C)**(1/2))

@@ -5,7 +5,7 @@ from Data.GMM_load import load_gmm
 from Pipeline import Pipeline, CrossValidator
 from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
-from featureExtraction import PCA, LDA
+from preProc import PCA, LDA, Center, Whiten, L2Norm
 from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression, SVM, GMM
 from plots import Histogram, Scatter, print_DCFs, print_ROCs, print_pearson_correlation_matrices
 
@@ -65,7 +65,17 @@ if __name__ == "__main__":
     histo.setElemPerBin(15)
     histo.setLabels(["Setosa", "Versicolor", "Virginica"])
     histo.setDimensions(["Sepal lenght", "Sepal width", "Petal length", "Petal width"])
-    pipe.setStages([scatter, histo])
+    white = Whiten()
+    white.setWithinCov(True)
+    pca = PCA()
+    pca.setDimension(2)
+    scatterPCA = Scatter()
+    scatterPCA.setLabels(["Setosa", "Versicolor", "Virginica"])
+    scatterPCA.setDimensions(["PC-1", "PC-2"])
+    histoPCA = Histogram()
+    histoPCA.setLabels(["Setosa", "Versicolor", "Virginica"])
+    histoPCA.setDimensions(["PC-1", "PC-2"])
+    pipe.setStages([scatter, histo, Center(), L2Norm(), scatter, histo])
     pipe.fit(D, L)
 
     pca = PCA()
