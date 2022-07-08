@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from Data.GMM_load import load_gmm
 from Pipeline import Pipeline, CrossValidator
 from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
-    LBG_x2_Cluster
+    LBG_x2_Cluster, assign_label_multi
 from featureExtraction import PCA, LDA
-from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression, SVM
+from classifiers import MVG, NaiveBayesMVG, TiedNaiveBayesMVG, TiedMVG, LogisticRegression, SVM, GMM
 from plots import Histogram, Scatter, print_DCFs, print_ROCs, print_pearson_correlation_matrices
 
 def load_iris_binary():
@@ -194,6 +194,32 @@ if __name__ == "__main__":
     # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), myBest)))
     # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), bestDensity)))
     # plt.show()
+    D, L = load_iris()
+    (DTR, LTR), (DTE, LTE) = split_db_2to1(D, L)
+
+    pipe = Pipeline()
+    gmm = GMM()
+    gmm.setPsi(0.01)
+    gmm.setAlpha(0.1)
+    for components in [1, 2, 4, 8, 16]:
+        iterations = round(numpy.log2(components))
+        gmm.setIterationLBG(iterations)
+        for t in ["full", "diagonal", "tied"]:
+            if t == "diagonal":
+                gmm.setDiagonal(True)
+                gmm.setTied(False)
+            if t == "tied":
+                gmm.setTied(True)
+                gmm.setDiagonal(False)
+            if t == "full":
+                gmm.setTied(False)
+                gmm.setDiagonal(False)
+            pipe.setStages([gmm])
+            model = pipe.fit(DTR, LTR, verbose=True)
+            post = model.transform(DTE, LTE)
+            pred = assign_label_multi(post)
+            acc = accuracy(pred, LTE)
+            print("Error:\t", (1 - acc) * 100, "%")
 
     """
     lrLinear = LogisticRegression()

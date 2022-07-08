@@ -3,7 +3,7 @@ import scipy
 import scipy.special
 
 from Pipeline import Model
-from Tools import logpdf_GAU_ND, mrow, mcol, vec
+from Tools import logpdf_GAU_ND, mrow, mcol, vec, logpdf_GMM
 
 
 class GenerativeModel(Model):
@@ -43,7 +43,7 @@ class GenerativeModel(Model):
         logSMarginal = mrow(scipy.special.logsumexp(logSJoint, axis=0))
         logSPost = logSJoint - logSMarginal
         SPost = numpy.exp(logSPost)
-        return ll
+        return SPost
 
 class MVGModel(GenerativeModel):
 
@@ -152,3 +152,37 @@ class SVMModel(Model):
         """
         S = numpy.dot((self.a * Z).T, self.kernel(X, D))
         return S
+
+class GMMModel(Model):
+    def __init__(self, K, GMMs):
+        super().__init__()
+        self.prior = None
+        self.K = K
+        self.GMMs = GMMs
+
+    def setPrior(self, prior):
+        self.prior = mcol(numpy.array(prior))
+        return
+
+    def transform(self, D, L):
+        K = self.K
+        nSamples = D.shape[1]
+        ll = numpy.zeros((K, nSamples))  # array of log likelihoods vectors
+        if self.prior is None:
+            self.prior = mcol(numpy.ones(K) / float(K))
+
+        # Compute log-likelihood
+        for c in range(K):
+            ll[c:c+1, :] = logpdf_GMM(D, self.GMMs[c])
+
+        if K == 2:
+            # Binary
+            llr = ll[1] - ll[0]
+            return llr
+
+        logSJoint = ll + numpy.log(self.prior)
+        # Can we skip the below part in order to get time, see slide 36 of GenerativeLinearQuadratic
+        logSMarginal = mrow(scipy.special.logsumexp(logSJoint, axis=0))
+        logSPost = logSJoint - logSMarginal
+        SPost = numpy.exp(logSPost)
+        return SPost

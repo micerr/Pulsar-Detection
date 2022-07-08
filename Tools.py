@@ -32,11 +32,30 @@ def logpdf_GMM(X, gmm):
         S[g, :] += numpy.log(w)  # log join density (add the log prior density)
     return scipy.special.logsumexp(S, axis=0)  # marginal density == density of GMM
 
-def EM(X, gmm, psi=0):
+def EM(X, gmm, psi=0, diag=False, tied=False):
     # gmm = [(w1, mu1, C1), (w2, mu2, C2), ...]
     M = len(gmm)  # Num clusters
     N = X.shape[1]  # Num samples
     D = X.shape[0]  # Num features
+
+    """
+    The GMM log-likelihood is not bounded above for M >= 2. Indeed, we can have arbitrarily high log-
+    likelihood by centering one component at one of the N samples, and letting the corresponding covariance
+    matrix shrink towards zero. To avoid these kind of degenerate solutions, we can constrain the minimum
+    values of the eigenvalues of the covariance matrices.
+    """
+
+    if psi > 0:
+        regularizedGMM = []
+        for g, (w, mu, C) in enumerate(gmm):
+            if diag:
+                C = C * numpy.eye(D)
+
+            U, s, _ = numpy.linalg.svd(C)
+            s[s < psi] = psi
+            C = numpy.dot(U, mcol(s) * U.T)
+            regularizedGMM.append((w, mu, C))
+        gmm = regularizedGMM
 
     def stepE(gmm):
         S = numpy.zeros((M, N))
@@ -68,23 +87,37 @@ def EM(X, gmm, psi=0):
         SIG = SecFor / Z.reshape(M, 1, 1) - (mrow(MU).T.reshape(M, D, 1) * MU.reshape(M, 1, D))  # (M, D, D)
         W = Z / N  # (M, 1) for each cluster there is a weight
 
-        """
-        The GMM log-likelihood is not bounded above for M >= 2. Indeed, we can have arbitrarily high log-
-        likelihood by centering one component at one of the N samples, and letting the corresponding covariance
-        matrix shrink towards zero. To avoid these kind of degenerate solutions, we can constrain the minimum
-        values of the eigenvalues of the covariance matrices.
-        """
+        # Tied Computation, do just one time for all
+        tiedC = numpy.zeros((D, D))
+        if tied:
+            tiedC = numpy.sum(Z.reshape(M, 1, 1) * SIG, axis=0) / N
+
         for g, C in enumerate(SIG):
-            U, s, _ = numpy.linalg.svd(C)
-            s[s < psi] = psi
-            SIG[g] = numpy.dot(U, mcol(s) * U.T)
+            # Diagonal Covariance matrices, it doesn't mean Naive Bayes
+            if diag:
+                SIG[g] = SIG[g] * numpy.eye(D)
+
+            # Tied Covariance
+            if tied:
+                SIG[g] = tiedC
+
+            """
+            The GMM log-likelihood is not bounded above for M >= 2. Indeed, we can have arbitrarily high log-
+            likelihood by centering one component at one of the N samples, and letting the corresponding covariance
+            matrix shrink towards zero. To avoid these kind of degenerate solutions, we can constrain the minimum
+            values of the eigenvalues of the covariance matrices.
+            """
+            if psi > 0:
+                U, s, _ = numpy.linalg.svd(C)
+                s[s < psi] = psi
+                SIG[g] = numpy.dot(U, mcol(s) * U.T)
 
         return [(W[g], MU[g], SIG[g]) for g in range(M)]
 
     def stopCriteria(gmm, newGMM, delta):
         old = numpy.mean(logpdf_GMM(X, gmm))
         new = numpy.mean(logpdf_GMM(X, newGMM))
-        print("Old: ", old, "New: ", new)
+        # print("Old: ", old, "New: ", new)
         if new < old:
             print("PANIC!!!!!!!")
         return new - old < delta
@@ -112,7 +145,7 @@ def LBG(gmm, alpha):
         newGMM.append((w/2, mcol(mu)-d, C))
     return newGMM
 
-def LBG_x2_Cluster(X, gmm, alpha, i, psi=0):
+def LBG_x2_Cluster(X, gmm, alpha, i, psi=0, diag=False, tied=False):
     """
     Usually the starting point is:
     w = 1
@@ -124,22 +157,19 @@ def LBG_x2_Cluster(X, gmm, alpha, i, psi=0):
     """
 
     """
-    The GMM log-likelihood is not bounded above for M >= 2. Indeed, we can have arbitrarily high log-
-    likelihood by centering one component at one of the N samples, and letting the corresponding covariance
-    matrix shrink towards zero. To avoid these kind of degenerate solutions, we can constrain the minimum
-    values of the eigenvalues of the covariance matrices.
+    If i == 0 there is just a single component, so the best solution si taking the mean of the Dataset, and the 
+    Covariance matrix. EM and LBG algorithm are not needed
     """
-    regularizedGMM = []
-    for g, (w, mu, C) in enumerate(gmm):
-        U, s, _ = numpy.linalg.svd(C)
-        s[s < psi] = psi
-        C = numpy.dot(U, mcol(s) * U.T)
-        regularizedGMM.append((w, mu, C))
-    gmm = regularizedGMM
+    if i == 0:
+        mu = numpy.mean(X, axis=1)
+        XC = X - mcol(mu)
+        C = numpy.dot(XC, XC.T) / X.shape[1]
+        return [(1.0, mcol(mu), C)]
 
-    for i in range(i):
+    for _ in range(i):
         gmm = LBG(gmm, alpha)  # G -> 2G
-        gmm = EM(X, gmm, psi)  # Apply EM algorithm
+        gmm = EM(X, gmm, psi, diag, tied)  # Apply EM algorithm
+
     return gmm  # gmm * 2^i Clusters
     
 def center_data(D):
@@ -182,6 +212,9 @@ def assign_label_bin(llr, p=0.5, Cfn=1, Cfp=1, t=None):
         t = - numpy.log((p * Cfn) / ((1 - p) * Cfp))
     P = (llr > t) + 0  # + 0 converts booleans to integers
     return P
+
+def assign_label_multi(post):
+    return numpy.argmax(post, axis=0)
 
 def DCF_u_bin(llr, L, pi=0.5, Cfn=1, Cfp=1, t=None):
     P = assign_label_bin(llr, pi, Cfn, Cfp, t)

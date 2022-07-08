@@ -1,9 +1,10 @@
 import numpy
 import scipy.optimize
+import matplotlib.pyplot as plt
 
 from Pipeline import PipelineStage
-from Tools import mcol, vec, mrow
-from models import MVGModel, TiedMVGModel, LogRegModel, SVMModel
+from Tools import mcol, vec, mrow, LBG_x2_Cluster, logpdf_GMM
+from models import MVGModel, TiedMVGModel, LogRegModel, SVMModel, GMMModel
 
 
 class MVG(PipelineStage):
@@ -423,9 +424,54 @@ class GMM(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.psi = 0
+        self.alpha = 0.1
+        self.i = 2
+        self.isTied = False
+        self.isDiagonal = False
+
+    def setDiagonal(self, diag):
+        self.isDiagonal = diag
+
+    def setTied(self, tied):
+        self.isTied = tied
+
+    def setIterationLBG(self, i):
+        self.i = i
+
+    def setAlpha(self, alpha):
+        self.alpha = alpha
+
+    def setPsi(self, psi):
+        self.psi = psi
 
     def compute(self, model, D, L):
-        pass
+        K = L.max() + 1
+
+        GMMs = []
+        for i in range(K):
+            # print("Class ", i)
+            DCl = D[:, L == i]
+
+            # Start gmm
+            mu = numpy.mean(DCl, axis=1)
+            XC = DCl - mcol(mu)
+            C = numpy.dot(XC, XC.T) / DCl.shape[1]
+            gmm = [(1.0, mcol(mu), C)]
+
+            GMMs.append(LBG_x2_Cluster(DCl, gmm, self.alpha, self.i, self.psi, self.isDiagonal, self.isTied))
+
+        return GMMModel(K, GMMs), D, L
 
     def __str__(self):
-        return "GMM"
+        desc = ""
+        if self.isDiagonal and self.isTied:
+            desc += "GMM Diagonal-Tied Covariance "
+        elif self.isDiagonal:
+            desc += "GMM Diagonal Covariance "
+        elif self.isTied:
+            desc += "GMM Tied Covariance "
+        else:
+            desc += "GMM Full Covariance "
+
+        return desc + "comps=%s alpha=%s psi=%s" % (2**self.i, self.alpha, self.psi)

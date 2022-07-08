@@ -9,6 +9,9 @@ class Pipeline:
         self.stages = []
         return
 
+    def setStages(self, stages):
+        self.stages = stages
+
     def addStages(self, stages):
         self.stages += stages
 
