@@ -10,6 +10,7 @@ class Histogram(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.ext = None
         self.dpi = None
         self.name = None
         self.save = False
@@ -20,24 +21,30 @@ class Histogram(PipelineStage):
 
     def setLabels(self, labels):
         self.labels = labels
+        return self
 
     def setDimensions(self, dimensions):
         self.dimensions = dimensions
+        return self
 
     def setElemPerBin(self, n):
         self.perBin = n
+        return self
 
     def setTitle(self, title):
         self.title = title
+        return self
 
     def setSaveDirectoryDPI(self, directory, name, ext, dpi):
         self.save = True
-        self.name = directory + "/" + name + "." + ext
+        self.name = directory + "/" + name
+        self.ext = "." + ext
         self.dpi = dpi
+        return self
 
     def compute(self, model, D, L):
         K = L.max() + 1
-        dims = D.shape[0]
+        dims = D.shape[0] if len(self.dimensions) == 0 else len(self.dimensions)
         N = D.shape[1]
         for dim in range(dims):
             plt.figure()
@@ -47,7 +54,7 @@ class Histogram(PipelineStage):
                 plt.hist(D[dim, L == k], bins=round(N/self.perBin), density=True, alpha=0.4, label=(k if len(self.labels) == 0 else self.labels[k]))
             plt.legend()
             if self.save:
-                plt.savefig(self.name, dpi=self.dpi)
+                plt.savefig(self.name+"_"+self.title+"_"+self.dimensions[dim]+self.ext, dpi=self.dpi)
             plt.show()
         return model, D, L
 
@@ -58,6 +65,7 @@ class Scatter(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.ext = None
         self.save = False
         self.dpi = None
         self.name = None
@@ -67,21 +75,26 @@ class Scatter(PipelineStage):
 
     def setLabels(self, labels):
         self.labels = labels
+        return self
 
     def setDimensions(self, dimensions):
         self.dimensions = dimensions
+        return self
 
     def setTitle(self, title):
         self.title = title
+        return self
 
     def setSaveDirectoryDPI(self, directory, name, ext, dpi):
         self.save = True
-        self.name = directory+"/"+name+"."+ext
+        self.name = directory+"/"+name
+        self.ext = "." + ext
         self.dpi = dpi
+        return self
 
     def compute(self, model, D, L):
         K = L.max() + 1
-        dims = D.shape[0]
+        dims = D.shape[0] if len(self.dimensions) == 0 else len(self.dimensions)
         for attri in range(dims):
             for attrj in range(dims):
                 if attri >= attrj:
@@ -91,10 +104,10 @@ class Scatter(PipelineStage):
                 plt.xlabel(attri if len(self.dimensions) == 0 else self.dimensions[attri])
                 plt.ylabel(attrj if len(self.dimensions) == 0 else self.dimensions[attrj])
                 for k in range(K):
-                    plt.scatter(D[attri, L == k], D[attrj, L == k], label=(k if len(self.labels) == 0 else self.labels[k]))
+                    plt.scatter(D[attri, L == k], D[attrj, L == k], alpha=0.1, label=(k if len(self.labels) == 0 else self.labels[k]))
                 plt.legend()
                 if self.save:
-                    plt.savefig(self.name, dpi=self.dpi)
+                    plt.savefig(self.name+"_"+self.title+"_"+self.dimensions[attri]+"_"+self.dimensions[attrj]+self.ext, dpi=self.dpi)
                 plt.show()
         return model, D, L
 
@@ -147,16 +160,18 @@ def print_DCFs(llrs, L, descriptions):
     plt.legend()
     plt.show()
 
-def print_pearson_correlation_mat(D, title):
+def print_pearson_correlation_mat(D, title, directory=None):
     dim = D.shape[0]
     plt.figure(figsize=(dim, dim))
     corrMatr = pearson_correlation_mat(D)
-    heatmap = sns.heatmap(corrMatr, vmin=-1, vmax=1, annot=True, cmap='Reds')
+    heatmap = sns.heatmap(corrMatr, vmin=-1, vmax=1, annot=True, cmap='gist_gray_r')
     heatmap.set_title('Pearson correlation matrix '+title, fontdict={'fontsize': 12}, pad=12)
+    if directory is not None:
+        plt.savefig(directory+"/"+title+".png", dpi=1000)
     plt.show()
 
-def print_pearson_correlation_matrices(D, L):
+def print_pearson_correlation_matrices(D, L, labels, directory=None):
     K = L.max() + 1
-    print_pearson_correlation_mat(D, "whole data")
+    print_pearson_correlation_mat(D, "Dataset", directory)
     for k in range(K):
-        print_pearson_correlation_mat(D[:, L == k], str(k))
+        print_pearson_correlation_mat(D[:, L == k], labels[k], directory)
