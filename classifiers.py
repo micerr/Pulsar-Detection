@@ -411,9 +411,10 @@ class SVM(PipelineStage):
         )
 
         # CHECK can be removed to save time, is used to control if everything is done well
-        # TODO this doesn't work with non-linear kernel, idk why D:
-        # wBest = self.getWeightsFromDual(aBest)  # wBest = [[w], [b]]
-        # print("Duality GAP: ", self.L_primal(wBest) + self.L_Dual(aBest)[0])
+        # if self.isNoKern:
+        #     wBest = self.getWeightsFromDual(aBest)  # wBest = [[w], [b]]
+        #     print("Duality GAP: ", self.L_primal(wBest) + self.L_Dual(aBest)[0])
+        # print("Dual loss :", -self.L_Dual(aBest)[0])
 
         return SVMModel(aBest, self.K, self.kernel, self.isNoKern, self.D, L), D, L
 
@@ -424,7 +425,7 @@ class GMM(PipelineStage):
 
     def __init__(self):
         super().__init__()
-        self.psi = 0
+        self.psi = 0.01
         self.alpha = 0.1
         self.i = 2
         self.isTied = False
