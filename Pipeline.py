@@ -92,11 +92,11 @@ class CrossValidator:
             model = self.pipeline.fit(DTR, LTR)
             llr[:, idxTest] = model.transform(DTE, LTE)
 
-        pred = assign_label_bin(llr, self.pi, self.Cfn, self.Cfp)
-        acc = accuracy(pred, L)
-        print("Error:\t",  (1-acc)*100, "%")
-        bCost = DCF_norm_bin(llr, L, self.pi, self.Cfn, self.Cfp)
-        minCost = DCF_min(llr, L, self.pi, self.Cfn, self.Cfp)
-        print("DCF norm:\t", bCost, "\nDCF min:\t", minCost, "\n")
+        # pred = assign_label_bin(llr, self.pi, self.Cfn, self.Cfp)
+        # acc = accuracy(pred, L)
+        # print("Error:\t",  (1-acc)*100, "%")
+        # bCost = DCF_norm_bin(llr, L, self.pi, self.Cfn, self.Cfp)
+        # minCost = DCF_min(llr, L, self.pi, self.Cfn, self.Cfp)
+        # print("DCF norm:\t", bCost, "\nDCF min:\t", minCost, "\n")
 
         return llr

@@ -43,7 +43,7 @@ class GenerativeModel(Model):
         logSMarginal = mrow(scipy.special.logsumexp(logSJoint, axis=0))
         logSPost = logSJoint - logSMarginal
         SPost = numpy.exp(logSPost)
-        return SPost
+        return ll
 
 class MVGModel(GenerativeModel):
 
@@ -185,4 +185,4 @@ class GMMModel(Model):
         logSMarginal = mrow(scipy.special.logsumexp(logSJoint, axis=0))
         logSPost = logSJoint - logSMarginal
         SPost = numpy.exp(logSPost)
-        return SPost
+        return ll

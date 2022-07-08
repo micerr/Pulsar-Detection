@@ -83,9 +83,20 @@ if __name__ == "__main__":
     pipe.setStages([lda, scatter])
     pipe.fit(D, L)
     scatter.setTitle("PCA+LDA")
-    scatter.setSaveDirectoryDPI(".", "pca_lda", "png", 1000)
+    # scatter.setSaveDirectoryDPI(".", "pca_lda", "png", 1000)
     pipe.setStages([pca, lda, scatter])
     pipe.fit(D, L)
+
+    # cv = CrossValidator()
+    # pipe = Pipeline()
+    # cv.setNumFolds(D.shape[1])
+    # for genModel in [MVG(), NaiveBayesMVG(), TiedMVG(), TiedNaiveBayesMVG()]:
+    #     pipe.setStages([genModel])
+    #     cv.setEstimator(pipe)
+    #     postP = cv.fit(D, L)
+    #     pred = assign_label_multi(postP)
+    #     acc = accuracy(pred, L)
+    #     print("Error:\t", (1 - acc) * 100, "%")
 
     D, L = load_iris_binary()
     (DTR, LTR), (DTE, LTE) = split_db_2to1(D, L)
