@@ -193,7 +193,6 @@ if __name__ == "__main__":
     # XPlot = numpy.linspace(-8, 12, 1000)
     # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), myBest)))
     # plt.plot(XPlot.ravel(), numpy.exp(logpdf_GMM(mrow(XPlot), bestDensity)))
-    # plt.legend()
     # plt.show()
 
     """

@@ -32,7 +32,7 @@ def logpdf_GMM(X, gmm):
         S[g, :] += numpy.log(w)  # log join density (add the log prior density)
     return scipy.special.logsumexp(S, axis=0)  # marginal density == density of GMM
 
-def EM(X, gmm):
+def EM(X, gmm, psi=0):
     # gmm = [(w1, mu1, C1), (w2, mu2, C2), ...]
     M = len(gmm)  # Num clusters
     N = X.shape[1]  # Num samples
@@ -67,6 +67,18 @@ def EM(X, gmm):
         # SIGFor = SecFor / Z.reshape(M, 1, 1) - MUCOV
         SIG = SecFor / Z.reshape(M, 1, 1) - (mrow(MU).T.reshape(M, D, 1) * MU.reshape(M, 1, D))  # (M, D, D)
         W = Z / N  # (M, 1) for each cluster there is a weight
+
+        """
+        The GMM log-likelihood is not bounded above for M >= 2. Indeed, we can have arbitrarily high log-
+        likelihood by centering one component at one of the N samples, and letting the corresponding covariance
+        matrix shrink towards zero. To avoid these kind of degenerate solutions, we can constrain the minimum
+        values of the eigenvalues of the covariance matrices.
+        """
+        for g, C in enumerate(SIG):
+            U, s, _ = numpy.linalg.svd(C)
+            s[s < psi] = psi
+            SIG[g] = numpy.dot(U, mcol(s) * U.T)
+
         return [(W[g], MU[g], SIG[g]) for g in range(M)]
 
     def stopCriteria(gmm, newGMM, delta):
@@ -100,7 +112,7 @@ def LBG(gmm, alpha):
         newGMM.append((w/2, mcol(mu)-d, C))
     return newGMM
 
-def LBG_x2_Cluster(X, gmm, alpha, i):
+def LBG_x2_Cluster(X, gmm, alpha, i, psi=0):
     """
     Usually the starting point is:
     w = 1
@@ -110,9 +122,24 @@ def LBG_x2_Cluster(X, gmm, alpha, i):
     But they are Hyper parameters (The problem is not a convex one)
     Alpha is a H-parameter too
     """
+
+    """
+    The GMM log-likelihood is not bounded above for M >= 2. Indeed, we can have arbitrarily high log-
+    likelihood by centering one component at one of the N samples, and letting the corresponding covariance
+    matrix shrink towards zero. To avoid these kind of degenerate solutions, we can constrain the minimum
+    values of the eigenvalues of the covariance matrices.
+    """
+    regularizedGMM = []
+    for g, (w, mu, C) in enumerate(gmm):
+        U, s, _ = numpy.linalg.svd(C)
+        s[s < psi] = psi
+        C = numpy.dot(U, mcol(s) * U.T)
+        regularizedGMM.append((w, mu, C))
+    gmm = regularizedGMM
+
     for i in range(i):
         gmm = LBG(gmm, alpha)  # G -> 2G
-        gmm = EM(X, gmm)  # Apply EM algorithm
+        gmm = EM(X, gmm, psi)  # Apply EM algorithm
     return gmm  # gmm * 2^i Clusters
     
 def center_data(D):
