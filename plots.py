@@ -164,10 +164,10 @@ def print_pearson_correlation_mat(D, title, directory=None):
     dim = D.shape[0]
     plt.figure(figsize=(dim, dim))
     corrMatr = pearson_correlation_mat(D)
-    heatmap = sns.heatmap(corrMatr, vmin=-1, vmax=1, annot=True, cmap='gist_gray_r')
+    heatmap = sns.heatmap(corrMatr, vmin=0, vmax=1, annot=True, cmap='gist_gray_r')
     heatmap.set_title('Pearson correlation matrix '+title, fontdict={'fontsize': 12}, pad=12)
     if directory is not None:
-        plt.savefig(directory+"/"+title+".png", dpi=1000)
+        plt.savefig(directory+"/"+title+".png", dpi=300)
     plt.show()
 
 def print_pearson_correlation_matrices(D, L, labels, directory=None):

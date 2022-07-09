@@ -33,28 +33,28 @@ if __name__ == "__main__":
     # pipe.fit(DTR, LTR)
     # print_pearson_correlation_matrices(DTR, LTR, classLabel, "./plots/correlation")
 
-    # scatter.setSaveDirectoryDPI("./plots/scatter/Znorm", "", "png", 600).setTitle("Znorm")
-    # hist.setSaveDirectoryDPI("./plots/histogram/Znorm", "", "png", 600).setTitle("Znorm")
+    # scatter.setSaveDirectoryDPI("./plots/scatter/Znorm", "", "png", 300).setTitle("Znorm")
+    # hist.setSaveDirectoryDPI("./plots/histogram/Znorm", "", "png", 300).setTitle("Znorm")
     # pipe.setStages([ZNorm(), scatter, hist])
     # pipe.fit(DTR, LTR)
 
-    # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 600).setTitle("L2norm")
-    # hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 600).setTitle("L2norm")
+    # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 300).setTitle("L2norm")
+    # hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 300).setTitle("L2norm")
     # pipe.setStages([L2Norm(), scatter, hist])
     # pipe.fit(DTR, LTR)
 
-    # scatter.setSaveDirectoryDPI("./plots/scatter/Gauss", "", "png", 600).setTitle("Gaussianized")
-    # hist.setSaveDirectoryDPI("./plots/histogram/Gauss", "", "png", 600).setTitle("Gaussianized")
+    # scatter.setSaveDirectoryDPI("./plots/scatter/Gauss", "", "png", 300).setTitle("Gaussianized")
+    # hist.setSaveDirectoryDPI("./plots/histogram/Gauss", "", "png", 300).setTitle("Gaussianized")
     # pipe.setStages([Gaussianization(), scatter, hist])
     # pipe.fit(DTR, LTR)
 
-    # scatter.setSaveDirectoryDPI("./plots/scatter/Znorm/Gauss", "", "png", 600).setTitle("Znorm-Gaussianized")
-    # hist.setSaveDirectoryDPI("./plots/histogram/Znorm/Gauss", "", "png", 600).setTitle("Znorm-Gaussianized")
+    # scatter.setSaveDirectoryDPI("./plots/scatter/Znorm/Gauss", "", "png", 300).setTitle("Znorm-Gaussianized")
+    # hist.setSaveDirectoryDPI("./plots/histogram/Znorm/Gauss", "", "png", 300).setTitle("Znorm-Gaussianized")
     # pipe.setStages([ZNorm(), Gaussianization(), scatter, hist])
     # pipe.fit(DTR, LTR)
 
-    # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm/Gauss", "", "png", 600).setTitle("L2norm-Gaussianized")
-    # hist.setSaveDirectoryDPI("./plots/histogram/L2norm/Gauss", "", "png", 600).setTitle("L2norm-Gaussianized")
+    # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm/Gauss", "", "png", 300).setTitle("L2norm-Gaussianized")
+    # hist.setSaveDirectoryDPI("./plots/histogram/L2norm/Gauss", "", "png", 300).setTitle("L2norm-Gaussianized")
     # pipe.setStages([L2Norm(), Gaussianization(), scatter, hist])
     # pipe.fit(DTR, LTR)
 

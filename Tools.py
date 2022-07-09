@@ -198,7 +198,7 @@ def pearson_correlation_mat(D):
     C = cov_mat(D)
     sqrtV = mcol(numpy.diag(C)**(1/2))
     R = C * numpy.dot(sqrtV**-1, (sqrtV**-1).T)
-    return R
+    return numpy.abs(R)
 
 def confusion_matrix(P, L):
     # P => Predictions
