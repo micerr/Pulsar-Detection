@@ -37,7 +37,7 @@ class MVG(PipelineStage):
         self.C = C
 
         newModel = MVGModel(K, u, C)
-        newModel.setP(model.P)
+        newModel.setPreproc(model.preproc)
 
         return newModel, D, L
 
@@ -74,7 +74,7 @@ class NaiveBayesMVG(PipelineStage):
         self.C = C
 
         newModel = MVGModel(K, u, C)
-        newModel.setP(model.P)
+        newModel.setPreproc(model.preproc)
 
         return newModel, D, L
 
@@ -85,9 +85,13 @@ class TiedMVG(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.piT = 0.5
         self.u = None
         self.C = None
         return
+    
+    def setPiT(self, pi):
+        self.piT = pi
 
     def compute(self, model, D, L):
         dim = D.shape[0]
@@ -106,8 +110,7 @@ class TiedMVG(PipelineStage):
             # center the points
             DClC = DCl - u[:, i:i+1]
             # compute the partial covariance matrix and add it to within-class
-            # TODO balancing covariance matrices
-            C += numpy.dot(DClC, DClC.T)
+            C += numpy.dot(DClC, DClC.T) * (self.piT if i == 1 else (1-self.piT))
         # divide the partial covariance by the number of samples
         C /= nSamples
 
@@ -115,20 +118,24 @@ class TiedMVG(PipelineStage):
         self.C = C
 
         newModel = TiedMVGModel(K, u, C)
-        newModel.setP(model.P)
+        newModel.setPreproc(model.preproc)
 
         return newModel, D, L
 
     def __str__(self):
-        return 'TiedMVG'
+        return 'TiedMVG piT= %d' % self.piT
 
 class TiedNaiveBayesMVG(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.piT = 0.5
         self.u = None
         self.C = None
         return
+    
+    def setPiT(self, pi):
+        self.piT = pi
 
     def compute(self, model, D, L):
         dim = D.shape[0]
@@ -147,8 +154,7 @@ class TiedNaiveBayesMVG(PipelineStage):
             # center the points
             DClC = DCl - u[:, i:i+1]
             # compute the partial covariance matrix
-            # TODO balancing covariance matrices
-            C += numpy.diag((DClC**2).sum(1))
+            C += numpy.diag((DClC**2).sum(1)) * (self.piT if i == 1 else (1-self.piT))
         # divide the partial covariance by the number of samples
         C /= nSamples
 
@@ -156,12 +162,12 @@ class TiedNaiveBayesMVG(PipelineStage):
         self.C = C
 
         newModel = TiedMVGModel(K, u, C)
-        newModel.setP(model.P)
+        newModel.setPreproc(model.preproc)
 
         return newModel, D, L
 
     def __str__(self):
-        return 'TiedNaiveBayesMVG'
+        return 'TiedNaiveBayesMVG pit= %d' % self.piT
 
 class LogisticRegression(PipelineStage):
 
@@ -264,7 +270,7 @@ class LogisticRegression(PipelineStage):
         self.min = minimum
 
         newModel = LogRegModel(wBest, bBest, self.isExpanded)
-        newModel.setP(model.P)
+        newModel.setPreproc(model.preproc)
         
         return newModel, D, L
 
@@ -278,6 +284,7 @@ class SVM(PipelineStage):
 
     def __init__(self):
         super().__init__()
+        self.piT = 0.5
         self.C = 0  # C = 0 => Hard-Margin SVM
         self.H = None  # (N, N)
         self.Z = None  # (1, N)
@@ -296,6 +303,9 @@ class SVM(PipelineStage):
 
     def setC(self, C):
         self.C = C
+
+    def setPiT(self, pi):
+        self.piT = pi
 
     def setPolyKernel(self, c, d):
         """
@@ -413,8 +423,8 @@ class SVM(PipelineStage):
         self.D = numpy.vstack((D, numpy.full((1, N), self.K)))
         self.Z = mrow((L * 2.0) - 1.0)  # 0 => -1 ; 1 => 1
         self.H = self.compute_H()
-        # TODO re-balancing,  you have to modify Ci
-        bounds = [(0, self.C if self.C != 0 else None) for i in range(N)]
+        piTEmp = numpy.sum(L == 1) / N
+        bounds = [(0, (self.C*self.piT/piTEmp if cl == 1 else self.C*(1-self.piT)/(1-piTEmp)) if self.C != 0 else None) for cl in L]
 
         aBest, minimum, d = scipy.optimize.fmin_l_bfgs_b(
             self.L_Dual,
@@ -435,7 +445,7 @@ class SVM(PipelineStage):
         # print("Dual loss :", -self.L_Dual(aBest)[0])
 
         newModel = SVMModel(aBest, self.K, self.kernel, self.isNoKern, self.D, L)
-        newModel.setP(model.P)
+        newModel.setPreproc(model.preproc)
 
         return newModel, D, L
 
@@ -484,7 +494,7 @@ class GMM(PipelineStage):
             GMMs.append(LBG_x2_Cluster(DCl, gmm, self.alpha, self.i, self.psi, self.isDiagonal, self.isTied))
 
         newModel = GMMModel(K, GMMs)
-        newModel.setP(model.P)
+        newModel.setPreproc(model.preproc)
 
         return newModel, D, L
 

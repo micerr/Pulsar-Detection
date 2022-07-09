@@ -24,6 +24,7 @@ class GenerativeModel(Model):
         pass
 
     def transform(self, D, L):
+        D, L = super().transform(D, L)
         K = self.K
         nSamples = D.shape[1]
         ll = numpy.zeros((K, nSamples))  # array of log likelihoods vectors
@@ -88,6 +89,7 @@ class LogRegModel(Model):
         self.isExpanded = isExpanded
 
     def transform(self, D, L):
+        D, L = super().transform(D, L)
         """
         Here we compute the score vector, is a vector with NumSample elements
         it's computed by :      s(xt) = w.T * xt + b
@@ -118,6 +120,7 @@ class SVMModel(Model):
         self.LTR = LTR
 
     def transform(self, D, L):
+        D, L = super().transform(D, L)
         N = D.shape[1]
         """
         If we are using a non-linear SVM kernel the modified version is implicitly done inside the
@@ -165,6 +168,7 @@ class GMMModel(Model):
         return
 
     def transform(self, D, L):
+        D, L = super().transform(D, L)
         K = self.K
         nSamples = D.shape[1]
         ll = numpy.zeros((K, nSamples))  # array of log likelihoods vectors

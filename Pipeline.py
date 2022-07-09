@@ -16,8 +16,6 @@ class Pipeline:
         self.stages += stages
 
     def fit(self, D, L, verbose=False):
-        # TODO preprocessing must be applied also to the test sample, find a way to do it, Think always as a single
-        #  test sample
         model = Model()
         for stage in self.stages:
             model, D, L = stage.compute(model, D, L)
@@ -50,13 +48,20 @@ class VoidStage(PipelineStage):
 class Model:
 
     def __init__(self):
-        self.P = None
+        self.preproc = []
 
     def transform(self, D, L):
-        pass
+        DTE = D
+        LTE = L
+        for preproc in self.preproc:
+            _, DTE, LTE = preproc.compute(None, DTE, LTE)
+        return DTE, LTE
 
-    def setP(self, P):
-        self.P = P
+    def addPreproc(self, preproc):
+        self.preproc.append(preproc)
+
+    def setPreproc(self, preproc):
+        self.preproc = preproc
 
 class CrossValidator:
 
@@ -106,8 +111,6 @@ class CrossValidator:
             LTE = L[idxTest]
 
             model = self.pipeline.fit(DTR, LTR)
-            if model.P is not None:
-                DTE = numpy.dot(model.P.T, DTE)
             llr[:, idxTest] = model.transform(DTE, LTE)
 
         # pred = assign_label_bin(llr, self.pi, self.Cfn, self.Cfp)

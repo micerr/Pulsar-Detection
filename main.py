@@ -5,7 +5,7 @@ from classifiers import MVG, NaiveBayesMVG, TiedMVG, TiedNaiveBayesMVG
 from Tools import mcol, vec, load_dataset, load_avila, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
 from plots import Scatter, Histogram, print_pearson_correlation_matrices
-from preProc import PCA, L2Norm, ZNorm, ZNorm_f, Gaussianization
+from preProc import PCA, L2Norm, ZNorm, Gaussianization
 
 if __name__ == "__main__":
     (DTR, LTR), _, labelDict = load_dataset()
@@ -69,10 +69,10 @@ if __name__ == "__main__":
     cv = CrossValidator()
     cv.setNumFolds(8)
 
-    def forEachGenerativeModel(dataPrec, featureExtr):
+    def forEachGenerativeModel(pre, dataPrec, featureExtr):
         for classificator in [mvg, mvgNaive, mvgTied, mvgTiedNaive]:
             print("%-18s" % classificator.__str__(), end="\t")
-            pipe.setStages([dataPrec, featureExtr, classificator])
+            pipe.setStages([pre, dataPrec, featureExtr, classificator])
             cv.setEstimator(pipe)
             llr = cv.fit(DTR, LTR)
             for prio in effPriors:
@@ -82,18 +82,19 @@ if __name__ == "__main__":
                 print("%.3f" % minDFC, end="\t\t")
             print()
 
-    print("MVG Classifiers")
-    print("%-18s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    for dataPrec in [VoidStage(), L2Norm(), Gaussianization()]:
-        for featureExtr in [VoidStage(), PCA()]:
-            if type(featureExtr) is PCA:
-                for i in range(6, 8)[::-1]:
-                    featureExtr.setDimension(i)
+    for pre in [VoidStage(), ZNorm(), L2Norm()]:
+        print("MVG Classifiers %s" % pre.__str__())
+        print("%-18s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+        for dataPrec in [VoidStage(), Gaussianization()]:
+            for featureExtr in [VoidStage(), PCA()]:
+                if type(featureExtr) is PCA:
+                    for i in range(6, 8)[::-1]:
+                        featureExtr.setDimension(i)
+                        print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+                        forEachGenerativeModel(pre, dataPrec, featureExtr)
+                else:
                     print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
-                    forEachGenerativeModel(dataPrec, featureExtr)
-            else:
-                print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
-                forEachGenerativeModel(dataPrec, featureExtr)
+                    forEachGenerativeModel(pre, dataPrec, featureExtr)
 
     # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 300).setTitle("L2norm")
     # hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 300).setTitle("L2norm")

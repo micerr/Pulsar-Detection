@@ -30,7 +30,7 @@ class PCA(PipelineStage):
         # Project data
         DP = numpy.dot(P.T, D)
 
-        model.setP(P)
+        model.addPreproc(PCAEval(P))
 
         return model, DP, L
 
@@ -40,6 +40,13 @@ class PCA(PipelineStage):
     def __str__(self):
         return 'PCA (m = %d)' % self.m
 
+class PCAEval(PipelineStage):
+    def __init__(self, P):
+        super().__init__()
+        self.P = P
+
+    def compute(self, model, D, L):
+        return model, numpy.dot(self.P.T, D), L
 
 class LDA(PipelineStage):
 
@@ -77,7 +84,7 @@ class LDA(PipelineStage):
         ## PROJECTING DATA ON NEW BASE ##
         DP = numpy.dot(P.T, D)
 
-        model.setP(P)
+        model.addPreproc(LDAEval(P))
 
         return model, DP, L
 
@@ -85,51 +92,64 @@ class LDA(PipelineStage):
         self.m = m
 
     def __str__(self):
-        return "LDA\nSw = %s\nSb = %s" % (self.Sw, self.Sb)
+        return "LDA"
 
-class Whiten(PipelineStage):
-    def __init__(self):
+class LDAEval(PipelineStage):
+    def __init__(self, P):
         super().__init__()
-        self.isWithin = True
-
-    def setWithinCov(self, withinCov):
-        self.isWithin = withinCov
+        self.P = P
 
     def compute(self, model, D, L):
-        C = cov_mat(D) if not self.isWithin else within_cov_mat(D, L)
-        C = C ** 0.5
-        return model, numpy.dot(C, D), L
-
-    def __str__(self):
-        return "Whitening"
-
-def ZNorm_f(D):
-    DC = center_data(D)
-    C = numpy.dot(DC, DC.T) / D.shape[1]
-    stdDev = mcol(numpy.diag(C)) ** 0.5
-    return DC / stdDev
+        return model, numpy.dot(self.P.T, D), L
 
 class ZNorm(PipelineStage):
     def __init__(self):
         super().__init__()
 
     def compute(self, model, D, L):
-        return model, ZNorm_f(D), L
+        mu = mcol(D.mean(1))
+        DC = D - mu
+        C = numpy.dot(DC, DC.T) / D.shape[1]
+        stdDev = mcol(numpy.diag(C)) ** 0.5
+
+        model.addPreproc(ZNormEval(mu, stdDev))
+        return model, DC / stdDev, L
 
     def __str__(self):
         return "Z Normalization"
+
+class ZNormEval(PipelineStage):
+    def __init__(self, mu, stdDev):
+        super().__init__()
+        self.mu = mu
+        self.stdDev = stdDev
+
+    def compute(self, model, D, L):
+        return model, (D - self.mu)/self.stdDev, L
 
 class L2Norm(PipelineStage):
     def __init__(self):
         super().__init__()
 
     def compute(self, model, D, L):
-        DC = center_data(D)
+        mu = mcol(D.mean(1))
+        DC = D - mu
         DN = DC / numpy.linalg.norm(DC, axis=0)
+
+        model.addPreproc(L2NormEval(mu))
         return model, DN, L
 
     def __str__(self):
         return "L2 Normalization"
+
+class L2NormEval(PipelineStage):
+    def __init__(self, mu):
+        super().__init__()
+        self.mu = mu
+
+    def compute(self, model, D, L):
+        DC = D - self.mu
+        return model, DC/numpy.linalg.norm(DC, axis=0), L
 
 def cdf_GAU_STD(X):
     return 0.5*(1 + scipy.special.erf(X/numpy.sqrt(2)))
@@ -155,7 +175,27 @@ class Gaussianization(PipelineStage):
         super().__init__()
 
     def compute(self, model, D, L):
-        return model, inv_cdf_GAU_STD(empirical_cdf(D)), L
+        N = D.shape[1]
+        sort_feature = numpy.sort(D, axis=1)
+        R = numpy.zeros(D.shape)
+        for i in range(N):
+            count = mcol(numpy.sum(sort_feature <= D[:, i:i + 1], 1))
+            R[:, i:i + 1] = (count + 1) / (N + 2)
+        model.addPreproc(GaussEval(sort_feature, N))
+        return model, inv_cdf_GAU_STD(R), L
 
     def __str__(self):
         return "Gaussianization"
+
+class GaussEval(PipelineStage):
+    def __init__(self, s, N):
+        super().__init__()
+        self.sort_feature = s
+        self.N = N
+
+    def compute(self, model, D, L):
+        R = numpy.zeros(D.shape)
+        for i in range(D.shape[1]):
+            count = mcol(numpy.sum(self.sort_feature <= D[:, i:i + 1], 1))
+            R[:, i:i + 1] = (count + 1) / (self.N + 2)
+        return model, inv_cdf_GAU_STD(R), L
