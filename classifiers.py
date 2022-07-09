@@ -106,6 +106,7 @@ class TiedMVG(PipelineStage):
             # center the points
             DClC = DCl - u[:, i:i+1]
             # compute the partial covariance matrix and add it to within-class
+            # TODO balancing covariance matrices
             C += numpy.dot(DClC, DClC.T)
         # divide the partial covariance by the number of samples
         C /= nSamples
@@ -146,6 +147,7 @@ class TiedNaiveBayesMVG(PipelineStage):
             # center the points
             DClC = DCl - u[:, i:i+1]
             # compute the partial covariance matrix
+            # TODO balancing covariance matrices
             C += numpy.diag((DClC**2).sum(1))
         # divide the partial covariance by the number of samples
         C /= nSamples
@@ -411,6 +413,7 @@ class SVM(PipelineStage):
         self.D = numpy.vstack((D, numpy.full((1, N), self.K)))
         self.Z = mrow((L * 2.0) - 1.0)  # 0 => -1 ; 1 => 1
         self.H = self.compute_H()
+        # TODO re-balancing,  you have to modify Ci
         bounds = [(0, self.C if self.C != 0 else None) for i in range(N)]
 
         aBest, minimum, d = scipy.optimize.fmin_l_bfgs_b(

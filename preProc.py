@@ -147,6 +147,9 @@ def empirical_cdf(X):
     return R
 
 class Gaussianization(PipelineStage):
+    """
+    Gaussianization automatically implement also ZNormalization
+    """
 
     def __init__(self):
         super().__init__()

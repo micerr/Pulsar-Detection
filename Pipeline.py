@@ -16,6 +16,8 @@ class Pipeline:
         self.stages += stages
 
     def fit(self, D, L, verbose=False):
+        # TODO preprocessing must be applied also to the test sample, find a way to do it, Think always as a single
+        #  test sample
         model = Model()
         for stage in self.stages:
             model, D, L = stage.compute(model, D, L)
@@ -89,7 +91,7 @@ class CrossValidator:
             sizeFold = nSamples / self.k
         sizeFold = int(sizeFold)
 
-        numpy.random.seed(nSamples*K)
+        numpy.random.seed(7)  # K-fold must be always the same for all classifiers
         idx = numpy.random.permutation(nSamples)
 
         llr = numpy.zeros((1, nSamples))
