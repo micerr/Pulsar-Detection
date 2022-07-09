@@ -355,6 +355,10 @@ def load_avila():
                 fields = mcol(numpy.array([float(i) for i in fields]))
                 label = line.split(',')[-1].strip()
                 if label == 'A' or label == 'F':
+                    if label == 'A':
+                        label = 0
+                    elif label == 'F':
+                        label = 1
                     DTR.append(fields)
                     LTR.append(label)
             except:
@@ -370,6 +374,10 @@ def load_avila():
                 fields = mcol(numpy.array([float(i) for i in fields]))
                 label = line.split(',')[-1].strip()
                 if label == 'A' or label == 'F':
+                    if label == 'A':
+                        label = 0
+                    elif label == 'F':
+                        label = 1
                     DTE.append(fields)
                     LTE.append(label)
             except:

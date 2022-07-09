@@ -2,7 +2,7 @@ import numpy as np
 
 from Pipeline import Pipeline, VoidStage, CrossValidator
 from classifiers import MVG, NaiveBayesMVG, TiedMVG, TiedNaiveBayesMVG
-from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
+from Tools import mcol, vec, load_dataset, load_avila, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
 from plots import Scatter, Histogram, print_pearson_correlation_matrices
 from preProc import PCA, L2Norm, ZNorm, ZNorm_f
