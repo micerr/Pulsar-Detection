@@ -1,7 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
 
-from Data.GMM_load import load_gmm
+# from Data.GMM_load import load_gmm
 from Pipeline import Pipeline, CrossValidator
 from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     scatter.setLabels(["Setosa", "Versicolor", "Virginica"])
     scatter.setDimensions(["Sepal lenght", "Sepal width", "Petal length", "Petal width"])
     histo = Histogram()
-    histo.setElemPerBin(15)
+    histo.setSizeBin(15)
     histo.setLabels(["Setosa", "Versicolor", "Virginica"])
     histo.setDimensions(["Sepal lenght", "Sepal width", "Petal length", "Petal width"])
     white = Whiten()

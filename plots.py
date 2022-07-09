@@ -27,7 +27,7 @@ class Histogram(PipelineStage):
         self.dimensions = dimensions
         return self
 
-    def setElemPerBin(self, n):
+    def setSizeBin(self, n):
         self.perBin = n
         return self
 

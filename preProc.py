@@ -83,17 +83,6 @@ class LDA(PipelineStage):
     def __str__(self):
         return "LDA\nSw = %s\nSb = %s" % (self.Sw, self.Sb)
 
-class Center(PipelineStage):
-    def __init__(self):
-        super().__init__()
-
-    def compute(self, model, D, L):
-        DC = center_data(D)
-        return model, DC, L
-
-    def __str__(self):
-        return "Centering"
-
 class Whiten(PipelineStage):
     def __init__(self):
         super().__init__()
@@ -110,25 +99,29 @@ class Whiten(PipelineStage):
     def __str__(self):
         return "Whitening"
 
-class StandardizeVariance(PipelineStage):
+def ZNorm_f(D):
+    DC = center_data(D)
+    C = numpy.dot(DC, DC.T) / D.shape[1]
+    stdDev = mcol(numpy.diag(C)) ** 0.5
+    return DC / stdDev
+
+class ZNorm(PipelineStage):
     def __init__(self):
         super().__init__()
 
     def compute(self, model, D, L):
-        C = cov_mat(D)
-        sqrtV = mcol(numpy.diag(C) ** (1 / 2))
-        DSV = D / sqrtV
-        return model, DSV, L
+        return model, ZNorm_f(D), L
 
     def __str__(self):
-        return "Standardize variances"
+        return "Z Normalization"
 
 class L2Norm(PipelineStage):
     def __init__(self):
         super().__init__()
 
     def compute(self, model, D, L):
-        DN = D / numpy.linalg.norm(D, axis=0)
+        DC = center_data(D)
+        DN = DC / numpy.linalg.norm(DC, axis=0)
         return model, DN, L
 
     def __str__(self):
