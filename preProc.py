@@ -1,5 +1,5 @@
 import numpy
-import scipy
+import scipy.special
 
 from Pipeline import PipelineStage
 from Tools import mcol, center_data, cov_mat, within_cov_mat
@@ -130,3 +130,29 @@ class L2Norm(PipelineStage):
 
     def __str__(self):
         return "L2 Normalization"
+
+def cdf_GAU_STD(X):
+    return 0.5*(1 + scipy.special.erf(X/numpy.sqrt(2)))
+
+def inv_cdf_GAU_STD(X):
+    return numpy.sqrt(2)*scipy.special.erfinv(2*X-1)
+
+def empirical_cdf(X):
+    N = X.shape[1]
+    sort_feature = numpy.sort(X, axis=1)
+    R = numpy.zeros(X.shape)
+    for i in range(N):
+        count = mcol(numpy.sum(sort_feature <= X[:, i:i+1], 1))
+        R[:, i:i+1] = (count + 1) / (N + 2)
+    return R
+
+class Gaussianization(PipelineStage):
+
+    def __init__(self):
+        super().__init__()
+
+    def compute(self, model, D, L):
+        return model, inv_cdf_GAU_STD(empirical_cdf(D)), L
+
+    def __str__(self):
+        return "Gaussianization"

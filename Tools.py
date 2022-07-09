@@ -327,7 +327,7 @@ def load_dataset():
   
     
 # For testing that everything is working properly  
-# Modified version: only most frequentist copyists are taken in consideration
+# Modified version: only most frequentest copyists are taken in consideration
 def load_avila():
     
     DTR = []

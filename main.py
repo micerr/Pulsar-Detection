@@ -5,10 +5,10 @@ from classifiers import MVG, NaiveBayesMVG, TiedMVG, TiedNaiveBayesMVG
 from Tools import mcol, vec, load_dataset, load_avila, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
 from plots import Scatter, Histogram, print_pearson_correlation_matrices
-from preProc import PCA, L2Norm, ZNorm, ZNorm_f
+from preProc import PCA, L2Norm, ZNorm, ZNorm_f, Gaussianization
 
 if __name__ == "__main__":
-    (DTR, LTR), (DTE, LTE), labelDict = load_avila()
+    (DTR, LTR), (DTE, LTE), labelDict = load_dataset()
     classLabel = {
         0: 'False',
         1: 'True'
@@ -41,6 +41,21 @@ if __name__ == "__main__":
     # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 600).setTitle("L2norm")
     # hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 600).setTitle("L2norm")
     # pipe.setStages([L2Norm(), scatter, hist])
+    # pipe.fit(DTR, LTR)
+
+    # scatter.setSaveDirectoryDPI("./plots/scatter/Gauss", "", "png", 600).setTitle("Gaussianized")
+    # hist.setSaveDirectoryDPI("./plots/histogram/Gauss", "", "png", 600).setTitle("Gaussianized")
+    # pipe.setStages([Gaussianization(), scatter, hist])
+    # pipe.fit(DTR, LTR)
+
+    # scatter.setSaveDirectoryDPI("./plots/scatter/Znorm/Gauss", "", "png", 600).setTitle("Znorm-Gaussianized")
+    # hist.setSaveDirectoryDPI("./plots/histogram/Znorm/Gauss", "", "png", 600).setTitle("Znorm-Gaussianized")
+    # pipe.setStages([ZNorm(), Gaussianization(), scatter, hist])
+    # pipe.fit(DTR, LTR)
+
+    # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm/Gauss", "", "png", 600).setTitle("L2norm-Gaussianized")
+    # hist.setSaveDirectoryDPI("./plots/histogram/L2norm/Gauss", "", "png", 600).setTitle("L2norm-Gaussianized")
+    # pipe.setStages([L2Norm(), Gaussianization(), scatter, hist])
     # pipe.fit(DTR, LTR)
 
     effPriors = [0.5, 0.1, 0.9]
@@ -80,10 +95,10 @@ if __name__ == "__main__":
                 print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
                 forEachGenerativeModel(dataPrec, featureExtr)
 
-    scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 300).setTitle("L2norm")
-    hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 300).setTitle("L2norm")
-    pipe.setStages([L2Norm(), scatter, hist])
-    pipe.fit(DTR, LTR)
+    # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 300).setTitle("L2norm")
+    # hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 300).setTitle("L2norm")
+    # pipe.setStages([L2Norm(), scatter, hist])
+    # pipe.fit(DTR, LTR)
     
     
     # # print scatters and histograms for PCA
