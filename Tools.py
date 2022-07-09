@@ -324,4 +324,59 @@ def load_dataset():
         LTE = numpy.array(LTE, dtype=numpy.int32)
     
     return (DTR, LTR), (DTE, LTE), labelDict
+  
+    
+# For testing that everything is working properly  
+# Modified version: only most frequentist copyists are taken in consideration
+def load_avila():
+    
+    DTR = []
+    LTR = []
+    DTE = []
+    LTE = []
+    
+    labelDict = {
+        0: 'intercolumnar distance', 
+        1: 'upper margin', 
+        2: 'lower margin', 
+        3: 'exploitation', 
+        4: 'row number', 
+        5: 'modular ratio', 
+        6: 'interlinear spacing', 
+        7: 'weight', 
+        8: 'peak number', 
+        9: 'modular ratio/ interlinear spacing'
+    }
+    
+    with open('./avila/avila-tr.txt', 'r') as trainData:
+        for line in trainData:
+            try:
+                fields = line.split(',')[0:10]
+                fields = mcol(numpy.array([float(i) for i in fields]))
+                label = line.split(',')[-1].strip()
+                if label == 'A' or label == 'F':
+                    DTR.append(fields)
+                    LTR.append(label)
+            except:
+                pass
+        
+        DTR = numpy.hstack(DTR)
+        LTR = numpy.array(LTR)
+    
+    with open('./avila/avila-ts.txt', 'r') as testData:
+        for line in testData:
+            try:
+                fields = line.split(',')[0:10]
+                fields = mcol(numpy.array([float(i) for i in fields]))
+                label = line.split(',')[-1].strip()
+                if label == 'A' or label == 'F':
+                    DTE.append(fields)
+                    LTE.append(label)
+            except:
+                pass
             
+        DTE = numpy.hstack(DTE)
+        LTE = numpy.array(LTE)
+    
+    return (DTR, LTR), (DTE, LTE), labelDict
+    

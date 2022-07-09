@@ -1,47 +1,46 @@
 import numpy as np
 
 from Pipeline import Pipeline
-from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
+from Tools import mcol, vec, load_dataset, load_avila, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
 from plots import Scatter, Histogram, print_pearson_correlation_matrices
 from preProc import PCA, L2Norm, ZNorm, ZNorm_f
 from classifiers import MVG
 
 if __name__ == "__main__":
-    (DTR, LTR), (DTE, LTE), labelDict = load_dataset()
+    (DTR, LTR), (DTE, LTE), labelDict = load_avila()
     classLabel = {
         0: 'False',
         1: 'True'
     }
-
-    """
+    pipe = Pipeline()
+    
     # print scatters and histograms
     scatter = Scatter()\
         .setTitle("RAW")\
         .setDimensions(labelDict)\
         .setLabels(classLabel)\
-        .setSaveDirectoryDPI("./plots/scatter/raw", "", "png", 600)
+        .setSaveDirectoryDPI("./plots/scatter/raw", "", "png", 300)
     hist = Histogram() \
         .setTitle("RAW") \
         .setDimensions(labelDict)\
         .setLabels(classLabel)\
         .setSizeBin(200)\
-        .setSaveDirectoryDPI("./plots/histogram/raw", "", "png", 600)
+        .setSaveDirectoryDPI("./plots/histogram/raw", "", "png", 300)
 
     pipe.setStages([scatter, hist])
     pipe.fit(DTR, LTR)
     print_pearson_correlation_matrices(DTR, LTR, classLabel, "./plots/correlation")
 
-    scatter.setSaveDirectoryDPI("./plots/scatter/Znorm", "", "png", 600).setTitle("Znorm")
-    hist.setSaveDirectoryDPI("./plots/histogram/Znorm", "", "png", 600).setTitle("Znorm")
+    scatter.setSaveDirectoryDPI("./plots/scatter/Znorm", "", "png", 300).setTitle("Znorm")
+    hist.setSaveDirectoryDPI("./plots/histogram/Znorm", "", "png", 300).setTitle("Znorm")
     pipe.setStages([ZNorm(), scatter, hist])
     pipe.fit(DTR, LTR)
 
-    scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 600).setTitle("L2norm")
-    hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 600).setTitle("L2norm")
+    scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 300).setTitle("L2norm")
+    hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 300).setTitle("L2norm")
     pipe.setStages([L2Norm(), scatter, hist])
     pipe.fit(DTR, LTR)
-    """
     
     # # print scatters and histograms for PCA
     # pca = PCA()
