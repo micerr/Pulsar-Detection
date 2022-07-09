@@ -258,6 +258,25 @@ def DCF_min(llr, L, pi=0.5, Cfn=1, Cfp=1):
             B_min = B_norm
     return B_min
 
+# Splitting the dataset in two parts: one part will be used for model training,
+# the second one for evaluation.
+# Single-Fold approach
+def split_db_2to1(D, L, seed=0):
+    nTrain = int(D.shape[1]*2.0/3.0) # 100 samples for training, 50 for evaluation
+    numpy.random.seed(seed)
+    # Shuffling data, for picking up two splits
+    idx = numpy.random.permutation(D.shape[1])
+    idxTrain = idx[0:nTrain]
+    idxTest = idx[nTrain:]
+    
+    DTR = D[:, idxTrain]
+    DTE = D[:, idxTest]
+    LTR = L[idxTrain]
+    LTE = L[idxTest]
+    
+    return (DTR, LTR), (DTE, LTE)
+
+
 def load_dataset():
     
     DTR = []

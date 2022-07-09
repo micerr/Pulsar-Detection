@@ -1,18 +1,20 @@
 import numpy as np
 
 from Pipeline import Pipeline
-from Tools import load_dataset
+from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
+    LBG_x2_Cluster, assign_label_multi
 from plots import Scatter, Histogram, print_pearson_correlation_matrices
 from preProc import PCA, L2Norm, ZNorm, ZNorm_f
+from classifiers import MVG
 
 if __name__ == "__main__":
-    (DTR, LTR), _, labelDict = load_dataset()
+    (DTR, LTR), (DTE, LTE), labelDict = load_dataset()
     classLabel = {
         0: 'False',
         1: 'True'
     }
-    pipe = Pipeline()
 
+    """
     # print scatters and histograms
     scatter = Scatter()\
         .setTitle("RAW")\
@@ -39,7 +41,8 @@ if __name__ == "__main__":
     hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 600).setTitle("L2norm")
     pipe.setStages([L2Norm(), scatter, hist])
     pipe.fit(DTR, LTR)
-
+    """
+    
     # # print scatters and histograms for PCA
     # pca = PCA()
     # for i in range(2, 8)[::-1]:
@@ -83,3 +86,64 @@ if __name__ == "__main__":
     #     pca.setDimension(i)
     #     pipe.setStages([zNorm, l2, pca, scatter, hist])
     #     pipe.fit(DTR, LTR)
+    
+    pipe = Pipeline()
+    mvg = MVG()
+    pipe.setStages([mvg])
+    model = pipe.fit(DTR, LTR)
+    llr = model.transform(DTE, LTE)
+    # Application (0.5, 1, 1)
+    DCFmin = DCF_min(llr, LTE, pi=0.5, Cfn=1, Cfp=1)
+    print("DCF_min = %f" % DCFmin)
+    
+    pipe = Pipeline()
+    mvg = MVG()
+    pipe.setStages([mvg])
+    model = pipe.fit(DTR, LTR)
+    llr = model.transform(DTE, LTE)
+    # Application (0.1, 1, 1)
+    DCFmin = DCF_min(llr, LTE, pi=0.1, Cfn=1, Cfp=1)
+    print("DCF_min = %f" % DCFmin)
+    
+    pipe = Pipeline()
+    mvg = MVG()
+    pipe.setStages([mvg])
+    model = pipe.fit(DTR, LTR)
+    llr = model.transform(DTE, LTE)
+    # Application (0.9, 1, 1)
+    DCFmin = DCF_min(llr, LTE, pi=0.9, Cfn=1, Cfp=1)
+    print("DCF_min = %f" % DCFmin)
+    
+    pipe = Pipeline()
+    pca = PCA()
+    pca.setDimension(7)
+    mvg = MVG()
+    pipe.setStages([pca, mvg])
+    model = pipe.fit(DTR, LTR)
+    llr = model.transform(DTE, LTE)
+    # Application (0.5, 1, 1)
+    DCFmin = DCF_min(llr, LTE, pi=0.5, Cfn=1, Cfp=1)
+    print("DCF_min = %f" % DCFmin)
+    
+    pipe = Pipeline()
+    pca = PCA()
+    pca.setDimension(7)
+    mvg = MVG()
+    pipe.setStages([pca, mvg])
+    model = pipe.fit(DTR, LTR)
+    llr = model.transform(DTE, LTE)
+    # Application (0.1, 1, 1)
+    DCFmin = DCF_min(llr, LTE, pi=0.1, Cfn=1, Cfp=1)
+    print("DCF_min = %f" % DCFmin)
+    
+    pipe = Pipeline()
+    pca = PCA()
+    pca.setDimension(7)
+    mvg = MVG()
+    pipe.setStages([pca, mvg])
+    model = pipe.fit(DTR, LTR)
+    llr = model.transform(DTE, LTE)
+    # Application (0.9, 1, 1)
+    DCFmin = DCF_min(llr, LTE, pi=0.9, Cfn=1, Cfp=1)
+    print("DCF_min = %f" % DCFmin)
+    
