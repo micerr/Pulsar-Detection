@@ -36,7 +36,10 @@ class MVG(PipelineStage):
         self.u = u
         self.C = C
 
-        return MVGModel(K, u, C), D, L
+        newModel = MVGModel(K, u, C)
+        newModel.setP(model.P)
+
+        return newModel, D, L
 
     def __str__(self):
         return 'MVG'
@@ -70,7 +73,10 @@ class NaiveBayesMVG(PipelineStage):
         self.u = u
         self.C = C
 
-        return MVGModel(K, u, C), D, L
+        newModel = MVGModel(K, u, C)
+        newModel.setP(model.P)
+
+        return newModel, D, L
 
     def __str__(self):
         return 'NaiveBayesMVG'
@@ -107,7 +113,10 @@ class TiedMVG(PipelineStage):
         self.u = u
         self.C = C
 
-        return TiedMVGModel(K, u, C), D, L
+        newModel = TiedMVGModel(K, u, C)
+        newModel.setP(model.P)
+
+        return newModel, D, L
 
     def __str__(self):
         return 'TiedMVG'
@@ -144,7 +153,10 @@ class TiedNaiveBayesMVG(PipelineStage):
         self.u = u
         self.C = C
 
-        return TiedMVGModel(K, u, C), D, L
+        newModel = TiedMVGModel(K, u, C)
+        newModel.setP(model.P)
+
+        return newModel, D, L
 
     def __str__(self):
         return 'TiedNaiveBayesMVG'
@@ -248,8 +260,11 @@ class LogisticRegression(PipelineStage):
         self.w = wBest
         self.b = bBest
         self.min = minimum
+
+        newModel = LogRegModel(wBest, bBest, self.isExpanded)
+        newModel.setP(model.P)
         
-        return LogRegModel(wBest, bBest, self.isExpanded), D, L
+        return newModel, D, L
 
     def __str__(self):
         return 'LogReg %s' % ("Quadratic" if self.isExpanded else "Linear")
@@ -416,7 +431,10 @@ class SVM(PipelineStage):
         #     print("Duality GAP: ", self.L_primal(wBest) + self.L_Dual(aBest)[0])
         # print("Dual loss :", -self.L_Dual(aBest)[0])
 
-        return SVMModel(aBest, self.K, self.kernel, self.isNoKern, self.D, L), D, L
+        newModel = SVMModel(aBest, self.K, self.kernel, self.isNoKern, self.D, L)
+        newModel.setP(model.P)
+
+        return newModel, D, L
 
     def __str__(self):
         return "SVM %s" % ("hard-margin" if self.C == 0 else "soft-margin")
@@ -462,7 +480,10 @@ class GMM(PipelineStage):
 
             GMMs.append(LBG_x2_Cluster(DCl, gmm, self.alpha, self.i, self.psi, self.isDiagonal, self.isTied))
 
-        return GMMModel(K, GMMs), D, L
+        newModel = GMMModel(K, GMMs)
+        newModel.setP(model.P)
+
+        return newModel, D, L
 
     def __str__(self):
         desc = ""

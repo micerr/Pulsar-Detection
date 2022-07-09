@@ -9,7 +9,7 @@ class PCA(PipelineStage):
 
     def __init__(self):
         super().__init__()
-        self.m = None
+        self.m = 0
         self.mean = None
         self.C = None
 
@@ -30,13 +30,15 @@ class PCA(PipelineStage):
         # Project data
         DP = numpy.dot(P.T, D)
 
+        model.setP(P)
+
         return model, DP, L
 
     def setDimension(self, m):
         self.m = m
 
     def __str__(self):
-        return 'PCA\nmu = %s\nC = %s\n' % (self.mean, self.C)
+        return 'PCA (m = %d)' % self.m
 
 
 class LDA(PipelineStage):
@@ -74,6 +76,8 @@ class LDA(PipelineStage):
 
         ## PROJECTING DATA ON NEW BASE ##
         DP = numpy.dot(P.T, D)
+
+        model.setP(P)
 
         return model, DP, L
 
