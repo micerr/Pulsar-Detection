@@ -16,7 +16,7 @@ class Pipeline:
         self.stages += stages
 
     def fit(self, D, L, verbose=False):
-        model = None
+        model = Model()
         for stage in self.stages:
             model, D, L = stage.compute(model, D, L)
             if verbose:
@@ -34,13 +34,27 @@ class PipelineStage:
     def __str__(self):
         pass
 
+class VoidStage(PipelineStage):
+
+    def __init__(self):
+        super().__init__()
+
+    def compute(self, model, D, L):
+        return model, D, L
+
+    def __str__(self):
+        return "Raw"
+
 class Model:
 
     def __init__(self):
-        pass
+        self.P = None
 
     def transform(self, D, L):
         pass
+
+    def setP(self, P):
+        self.P = P
 
 class CrossValidator:
 
@@ -90,6 +104,8 @@ class CrossValidator:
             LTE = L[idxTest]
 
             model = self.pipeline.fit(DTR, LTR)
+            if model.P is not None:
+                DTE = numpy.dot(model.P.T, DTE)
             llr[:, idxTest] = model.transform(DTE, LTE)
 
         # pred = assign_label_bin(llr, self.pi, self.Cfn, self.Cfp)

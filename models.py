@@ -31,12 +31,12 @@ class GenerativeModel(Model):
             self.prior = mcol(numpy.ones(K) / float(K))
 
         # Compute log-likelihood
-        ll = self.logLikelihood(ll, D, self.mu, self.C)
+        ll = self.logLikelihood(ll, D, self.mu, self.C)  # (K, N)
 
         if K == 2:
             # Binary
             llr = ll[1] - ll[0]
-            return llr
+            return llr  # (1, N)
 
         logSJoint = ll + numpy.log(self.prior)
         # Can we skip the below part in order to get time, see slide 36 of GenerativeLinearQuadratic
