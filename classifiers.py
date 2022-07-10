@@ -92,6 +92,7 @@ class TiedMVG(PipelineStage):
     
     def setPiT(self, pi):
         self.piT = pi
+        return self
 
     def compute(self, model, D, L):
         dim = D.shape[0]
@@ -123,7 +124,7 @@ class TiedMVG(PipelineStage):
         return newModel, D, L
 
     def __str__(self):
-        return 'TiedMVG piT= %d' % self.piT
+        return 'TiedMVG piT= %.1f' % self.piT
 
 class TiedNaiveBayesMVG(PipelineStage):
 
@@ -136,6 +137,7 @@ class TiedNaiveBayesMVG(PipelineStage):
     
     def setPiT(self, pi):
         self.piT = pi
+        return self
 
     def compute(self, model, D, L):
         dim = D.shape[0]
@@ -167,7 +169,7 @@ class TiedNaiveBayesMVG(PipelineStage):
         return newModel, D, L
 
     def __str__(self):
-        return 'TiedNaiveBayesMVG pit= %d' % self.piT
+        return 'TiedNaiveBayesMVG piT= %.1f' % self.piT
 
 class LogisticRegression(PipelineStage):
 
@@ -182,7 +184,7 @@ class LogisticRegression(PipelineStage):
         self.Z = None
         self.D = None
         self.dim = None
-        self.piT = None  # balancer prior prob
+        self.piT = 0.5  # balancer prior prob
         self.isExpanded = False
         
     def J(self, x):
@@ -223,12 +225,15 @@ class LogisticRegression(PipelineStage):
     
     def setLambda(self, lmbd):
         self.lmbd = lmbd
+        return self
 
     def setPiT(self, pi):
         self.piT = pi
+        return self
 
     def setExpanded(self, isExpanded):
         self.isExpanded = isExpanded
+        return self
 
     def compute(self, model, D, L):
         self.D = D
@@ -250,6 +255,8 @@ class LogisticRegression(PipelineStage):
                 phix[:, i:i + 1] = numpy.vstack((vec(numpy.dot(x, x.T)), x))
 
             self.D = phix
+            self.DT = phix[:, L == 1]
+            self.DF = phix[:, L == 0]
 
         # find the minimum of function J(w, b)
         bestParam, minimum, d = scipy.optimize.fmin_l_bfgs_b(
@@ -275,7 +282,7 @@ class LogisticRegression(PipelineStage):
         return newModel, D, L
 
     def __str__(self):
-        return 'LogReg %s' % ("Quadratic" if self.isExpanded else "Linear")
+        return 'LogReg %s piT= %.1f' % (("Quadratic" if self.isExpanded else "Linear"), self.piT)
     
 class SVM(PipelineStage):
 

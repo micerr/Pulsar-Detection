@@ -1,0 +1,38 @@
+MVG Classifiers Gaussianization
+                              	pi = 0.5	pi = 0.1	pi = 0.9
+Gaussianization -- Raw
+MVG                           	0.159		0.247		0.727		
+NaiveBayesMVG                 	0.153		0.278		0.619		
+TiedMVG piT= 0.5              	0.131		0.236		0.534		
+TiedMVG piT= 0.1              	0.134		0.239		0.531		
+TiedMVG piT= 0.9              	0.125		0.239		0.520		
+TiedNaiveBayesMVG piT= 0.5    	0.163		0.291		0.619		
+TiedNaiveBayesMVG piT= 0.9    	0.155		0.292		0.626		
+TiedNaiveBayesMVG piT= 0.5    	0.163		0.291		0.619		
+Gaussianization -- PCA (m = 7)
+MVG                           	0.155		0.245		0.723		
+NaiveBayesMVG                 	0.163		0.250		0.655		
+TiedMVG piT= 0.5              	0.134		0.247		0.539		
+TiedMVG piT= 0.1              	0.136		0.250		0.537		
+TiedMVG piT= 0.9              	0.127		0.242		0.526		
+TiedNaiveBayesMVG piT= 0.5    	0.136		0.253		0.566		
+TiedNaiveBayesMVG piT= 0.9    	0.138		0.253		0.565		
+TiedNaiveBayesMVG piT= 0.5    	0.136		0.253		0.566		
+Gaussianization -- PCA (m = 6)
+MVG                           	0.154		0.243		0.694		
+NaiveBayesMVG                 	0.159		0.245		0.634		
+TiedMVG piT= 0.5              	0.136		0.246		0.548		
+TiedMVG piT= 0.1              	0.137		0.248		0.542		
+TiedMVG piT= 0.9              	0.128		0.235		0.535		
+TiedNaiveBayesMVG piT= 0.5    	0.141		0.256		0.591		
+TiedNaiveBayesMVG piT= 0.9    	0.143		0.256		0.565		
+TiedNaiveBayesMVG piT= 0.5    	0.141		0.256		0.591		
+Gaussianization -- PCA (m = 5)
+MVG                           	0.153		0.248		0.708		
+NaiveBayesMVG                 	0.157		0.245		0.647		
+TiedMVG piT= 0.5              	0.136		0.245		0.547		
+TiedMVG piT= 0.1              	0.136		0.248		0.540		
+TiedMVG piT= 0.9              	0.131		0.236		0.527		
+TiedNaiveBayesMVG piT= 0.5    	0.142		0.256		0.588		
+TiedNaiveBayesMVG piT= 0.9    	0.144		0.255		0.569		
+TiedNaiveBayesMVG piT= 0.5    	0.142		0.256		0.588	

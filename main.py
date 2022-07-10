@@ -1,11 +1,17 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from Pipeline import Pipeline, VoidStage, CrossValidator
-from classifiers import MVG, NaiveBayesMVG, TiedMVG, TiedNaiveBayesMVG
+from classifiers import MVG, NaiveBayesMVG, TiedMVG, TiedNaiveBayesMVG, LogisticRegression, SVM
 from Tools import mcol, vec, load_dataset, load_avila, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
 from plots import Scatter, Histogram, print_pearson_correlation_matrices
 from preProc import PCA, L2Norm, ZNorm, Gaussianization
+
+effPriors = [0.5, 0.1, 0.9]
+lambdas = [10**-6, 10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, 10**3, 10**4, 10**5, 10**6]
+C = [10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, 10**3]
+K = [10**-2, 10**-1, 10**0, 10**1, 10**2]
 
 if __name__ == "__main__":
     (DTR, LTR), _, labelDict = load_dataset()
@@ -32,47 +38,54 @@ if __name__ == "__main__":
     # pipe.setStages([scatter, hist])
     # pipe.fit(DTR, LTR)
     # print_pearson_correlation_matrices(DTR, LTR, classLabel, "./plots/correlation")
-
+#
     # scatter.setSaveDirectoryDPI("./plots/scatter/Znorm", "", "png", 300).setTitle("Znorm")
     # hist.setSaveDirectoryDPI("./plots/histogram/Znorm", "", "png", 300).setTitle("Znorm")
     # pipe.setStages([ZNorm(), scatter, hist])
     # pipe.fit(DTR, LTR)
-
+#
     # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 300).setTitle("L2norm")
     # hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 300).setTitle("L2norm")
     # pipe.setStages([L2Norm(), scatter, hist])
     # pipe.fit(DTR, LTR)
-
+#
     # scatter.setSaveDirectoryDPI("./plots/scatter/Gauss", "", "png", 300).setTitle("Gaussianized")
     # hist.setSaveDirectoryDPI("./plots/histogram/Gauss", "", "png", 300).setTitle("Gaussianized")
     # pipe.setStages([Gaussianization(), scatter, hist])
     # pipe.fit(DTR, LTR)
-
+#
     # scatter.setSaveDirectoryDPI("./plots/scatter/Znorm/Gauss", "", "png", 300).setTitle("Znorm-Gaussianized")
     # hist.setSaveDirectoryDPI("./plots/histogram/Znorm/Gauss", "", "png", 300).setTitle("Znorm-Gaussianized")
     # pipe.setStages([ZNorm(), Gaussianization(), scatter, hist])
     # pipe.fit(DTR, LTR)
-
+#
     # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm/Gauss", "", "png", 300).setTitle("L2norm-Gaussianized")
     # hist.setSaveDirectoryDPI("./plots/histogram/L2norm/Gauss", "", "png", 300).setTitle("L2norm-Gaussianized")
     # pipe.setStages([L2Norm(), Gaussianization(), scatter, hist])
     # pipe.fit(DTR, LTR)
 
-    effPriors = [0.5, 0.1, 0.9]
 
-    # MVG
+    # Generative Models
     mvg = MVG()
     mvgNaive = NaiveBayesMVG()
     mvgTied = TiedMVG()
+    mvgTied1 = TiedMVG()
+    mvgTied1.setPiT(0.1)
+    mvgTied9 = TiedMVG()
+    mvgTied9.setPiT(0.9)
     mvgTiedNaive = TiedNaiveBayesMVG()
+    mvgTiedNaive1 = TiedNaiveBayesMVG()
+    mvgTiedNaive1.setPiT(0.1)
+    mvgTiedNaive9 = TiedNaiveBayesMVG()
+    mvgTiedNaive1.setPiT(0.9)
 
     cv = CrossValidator()
     cv.setNumFolds(8)
 
-    def forEachGenerativeModel(pre, dataPrec, featureExtr):
-        for classificator in [mvg, mvgNaive, mvgTied, mvgTiedNaive]:
-            print("%-18s" % classificator.__str__(), end="\t")
-            pipe.setStages([pre, dataPrec, featureExtr, classificator])
+    def forEachGenerativeModel(dataPrec, featureExtr):
+        for classificator in [mvg, mvgNaive, mvgTied, mvgTied1, mvgTied9, mvgTiedNaive, mvgTiedNaive1, mvgTiedNaive9]:
+            print("%-30s" % classificator.__str__(), end="\t")
+            pipe.setStages([ZNorm(), dataPrec, featureExtr, classificator])
             cv.setEstimator(pipe)
             llr = cv.fit(DTR, LTR)
             for prio in effPriors:
@@ -82,127 +95,129 @@ if __name__ == "__main__":
                 print("%.3f" % minDFC, end="\t\t")
             print()
 
-    for pre in [VoidStage(), ZNorm(), L2Norm()]:
-        print("MVG Classifiers %s" % pre.__str__())
-        print("%-18s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-        for dataPrec in [VoidStage(), Gaussianization()]:
-            for featureExtr in [VoidStage(), PCA()]:
-                if type(featureExtr) is PCA:
-                    for i in range(6, 8)[::-1]:
-                        featureExtr.setDimension(i)
-                        print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
-                        forEachGenerativeModel(pre, dataPrec, featureExtr)
-                else:
-                    print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
-                    forEachGenerativeModel(pre, dataPrec, featureExtr)
+    # print("MVG Classifiers ")
+    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    # for dataPrec in [VoidStage(), L2Norm(), Gaussianization()]:
+    #     for featureExtr in [VoidStage(), PCA()]:
+    #         if type(featureExtr) is PCA:
+    #             for i in range(5, 8)[::-1]:
+    #                 featureExtr.setDimension(i)
+    #                 print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #                 forEachGenerativeModel(dataPrec, featureExtr)
+    #         else:
+    #             print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #             forEachGenerativeModel(dataPrec, featureExtr)
 
-    # scatter.setSaveDirectoryDPI("./plots/scatter/L2norm", "", "png", 300).setTitle("L2norm")
-    # hist.setSaveDirectoryDPI("./plots/histogram/L2norm", "", "png", 300).setTitle("L2norm")
-    # pipe.setStages([L2Norm(), scatter, hist])
-    # pipe.fit(DTR, LTR)
-    
-    
-    # # print scatters and histograms for PCA
-    # pca = PCA()
-    # for i in range(2, 8)[::-1]:
-    #     labelDim = []
-    #     for j in range(i):
-    #         labelDim.append("PCA-"+str(j))
-    #     scatter\
-    #         .setTitle("PCA-"+str(i))\
-    #         .setDimensions(labelDim) \
-    #         .setLabels(classLabel) \
-    #         .setSaveDirectoryDPI("./plots/scatter/pca"+str(i), "", "png", 600)
-    #     hist\
-    #         .setTitle("PCA-" + str(i)) \
-    #         .setDimensions(labelDim) \
-    #         .setLabels(classLabel) \
-    #         .setSizeBin(200) \
-    #         .setSaveDirectoryDPI("./plots/histogram/pca"+str(i), "", "png", 600)
-    #     pca.setDimension(i)
-    #     pipe.setStages([pca, scatter, hist])
-    #     pipe.fit(DTR, LTR)
+    # Discriminant probabilistic models
+    lr = LogisticRegression()
 
-    # # print scatters and histograms for L2 + PCA
-    # pca = PCA()
-    # for i in range(2, 8)[::-1]:
-    #     labelDim = []
-    #     for j in range(i):
-    #         labelDim.append("PCA-" + str(j))
-    #     scatter \
-    #         .setTitle("PCA-" + str(i)) \
-    #         .setDimensions(labelDim) \
-    #         .setLabels(classLabel) \
-    #         .setSaveDirectoryDPI("./plots/scatter/l2_pca" + str(i), "", "png", 600)
-    #     hist \
-    #         .setTitle("PCA-" + str(i)) \
-    #         .setDimensions(labelDim) \
-    #         .setLabels(classLabel) \
-    #         .setSizeBin(200) \
-    #         .setSaveDirectoryDPI("./plots/histogram/l2_pca" + str(i), "", "png", 600)
-    #     zNorm = ZNorm()
-    #     l2 = L2Norm()
-    #     pca.setDimension(i)
-    #     pipe.setStages([zNorm, l2, pca, scatter, hist])
-    #     pipe.fit(DTR, LTR)
-    
-    # pipe = Pipeline()
-    # mvg = MVG()
-    # pipe.setStages([mvg])
-    # model = pipe.fit(DTR, LTR)
-    # llr = model.transform(DTE, LTE)
-    # # Application (0.5, 1, 1)
-    # DCFmin = DCF_min(llr, LTE, pi=0.5, Cfn=1, Cfp=1)
-    # print("DCF_min = %f" % DCFmin)
-    #
-    # pipe = Pipeline()
-    # mvg = MVG()
-    # pipe.setStages([mvg])
-    # model = pipe.fit(DTR, LTR)
-    # llr = model.transform(DTE, LTE)
-    # # Application (0.1, 1, 1)
-    # DCFmin = DCF_min(llr, LTE, pi=0.1, Cfn=1, Cfp=1)
-    # print("DCF_min = %f" % DCFmin)
-    #
-    # pipe = Pipeline()
-    # mvg = MVG()
-    # pipe.setStages([mvg])
-    # model = pipe.fit(DTR, LTR)
-    # llr = model.transform(DTE, LTE)
-    # # Application (0.9, 1, 1)
-    # DCFmin = DCF_min(llr, LTE, pi=0.9, Cfn=1, Cfp=1)
-    # print("DCF_min = %f" % DCFmin)
-    #
-    # pipe = Pipeline()
-    # pca = PCA()
-    # pca.setDimension(7)
-    # mvg = MVG()
-    # pipe.setStages([pca, mvg])
-    # model = pipe.fit(DTR, LTR)
-    # llr = model.transform(DTE, LTE)
-    # # Application (0.5, 1, 1)
-    # DCFmin = DCF_min(llr, LTE, pi=0.5, Cfn=1, Cfp=1)
-    # print("DCF_min = %f" % DCFmin)
-    #
-    # pipe = Pipeline()
-    # pca = PCA()
-    # pca.setDimension(7)
-    # mvg = MVG()
-    # pipe.setStages([pca, mvg])
-    # model = pipe.fit(DTR, LTR)
-    # llr = model.transform(DTE, LTE)
-    # # Application (0.1, 1, 1)
-    # DCFmin = DCF_min(llr, LTE, pi=0.1, Cfn=1, Cfp=1)
-    # print("DCF_min = %f" % DCFmin)
-    #
-    # pipe = Pipeline()
-    # pca = PCA()
-    # pca.setDimension(7)
-    # mvg = MVG()
-    # pipe.setStages([pca, mvg])
-    # model = pipe.fit(DTR, LTR)
-    # llr = model.transform(DTE, LTE)
-    # # Application (0.9, 1, 1)
-    # DCFmin = DCF_min(llr, LTE, pi=0.9, Cfn=1, Cfp=1)
-    # print("DCF_min = %f" % DCFmin)
-    
+    def plotDCFByLambda(preProc, minDCFs, directory):
+        plt.figure()
+        plt.title(directory+" "+preProc.__str__())
+        plt.xscale("log")
+        plt.xlabel("lambda")
+        plt.ylabel("DCF")
+        x = np.linspace(lambdas[0], lambdas[-1], len(lambdas))
+        plt.plot(x, minDCFs[0], label="minDCF(piT= 0.5)")
+        plt.plot(x, minDCFs[1], label="minDCF(piT= 0.1)")
+        plt.plot(x, minDCFs[2], label="minDCF(piT= 0.9)")
+        plt.xlim([lambdas[0], lambdas[-1]])
+        plt.ylim([0, 1])
+        plt.legend()
+        plt.savefig("./plots/LogReg/"+directory+"/"+preProc.__str__()+".png", dpi=300)
+        plt.show()
+
+    # find best lambda linear
+    # lr.setPiT(0.5)
+    # minDCFs = np.zeros((3, 13))
+    # for preProc in [VoidStage(), L2Norm(), Gaussianization()]:
+    #     for i, lambd in enumerate(lambdas):
+    #         lr.setLambda(lambd)
+    #         pipe.setStages([ZNorm(), preProc, lr])
+    #         cv.setEstimator(pipe)
+    #         llr = cv.fit(DTR, LTR)
+    #         for j, prio in enumerate(effPriors):
+    #             print(lambd, " ", prio)
+    #             minDCFs[j, i] = DCF_min(llr, LTR, pi=prio)
+    #     plotDCFByLambda(preProc, minDCFs, "linear")
+
+    # find best lambda quad
+    # for preProc in [VoidStage(), L2Norm(), Gaussianization()]:
+    #     for i, lambd in enumerate(lambdas):
+    #         lr.setLambda(lambd)
+    #         lr.setExpanded(True)
+    #         pipe.setStages([ZNorm(), preProc, lr])
+    #         cv.setEstimator(pipe)
+    #         llr = cv.fit(DTR, LTR)
+    #         for j, prio in enumerate(effPriors):
+    #             print(lambd, " ", prio)
+    #             minDCFs[j, i] = DCF_min(llr, LTR, pi=prio)
+    #     plotDCFByLambda(preProc, minDCFs, "quad")
+
+    lr.setLambda(10**-6)
+    lr.setExpanded(True)
+
+    def forEachLogRegModel(dataPrec, featureExtr):
+        for i, classificator in enumerate([lr, lr, lr]):
+            lr.setPiT(effPriors[i])
+            print("%-30s" % classificator.__str__(), end="\t")
+            pipe.setStages([ZNorm(), dataPrec, featureExtr, classificator])
+            cv.setEstimator(pipe)
+            llr = cv.fit(DTR, LTR)
+            for prio in effPriors:
+                minDFC = DCF_min(llr, LTR, pi=prio)
+                # pred = assign_label_bin(llr, p=prio)
+                # acc = accuracy(pred, LTR)
+                print("%.3f" % minDFC, end="\t\t")
+            print()
+
+    # print("LogReg linear Classifiers ")
+    # print("LogReg Quadratic Classifiers ")
+    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    # for dataPrec in [VoidStage(), L2Norm(), Gaussianization()]:
+    #     for featureExtr in [VoidStage(), PCA()]:
+    #         if type(featureExtr) is PCA:
+    #             for i in range(5, 8)[::-1]:
+    #                 featureExtr.setDimension(i)
+    #                 print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #                 forEachLogRegModel(dataPrec, featureExtr)
+    #         else:
+    #             print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #             forEachLogRegModel(dataPrec, featureExtr)
+
+    # Discriminant non-probabilistic model
+    svm = SVM()
+
+    def plotDCFByCK(preProc, minDCFs, directory):
+        plt.figure()
+        plt.title(directory+" "+preProc.__str__())
+        plt.xscale("log")
+        plt.xlabel("C")
+        plt.ylabel("DCF")
+        x = np.linspace(C[0], C[-1], len(C))
+        for j in range(len(K)):
+            plt.plot(x, minDCFs[0, j, :], labelDict="minDCF(piT= 0.5)")
+            plt.plot(x, minDCFs[1, j, :], labelDict="minDCF(piT= 0.1)")
+            plt.plot(x, minDCFs[2, j, :], labelDict="minDCF(piT= 0.9)")
+        plt.xlim([C[0], C[-1]])
+        plt.ylim([0, 1])
+        plt.legend()
+        plt.savefig("./plots/svm/"+directory+"/"+preProc.__str__()+".png", dpi=300)
+        plt.show()
+
+    # find best C and K linear
+    svm.setNoKern()
+
+    minDCFs = np.zeros((3, len(K), len(C)))
+    for preProc in [VoidStage(), L2Norm(), Gaussianization()]:
+        for i, c in enumerate(C):
+            for n, k in enumerate(K):
+                svm.setC(c)
+                svm.setK(k)
+                pipe.setStages([ZNorm(), preProc, svm])
+                cv.setEstimator(pipe)
+                llr = cv.fit(DTR, LTR)
+                for j, prio in enumerate(effPriors):
+                    print(c, " ", k, " ", prio)
+                    minDCFs[j, n, i] = DCF_min(llr, LTR, pi=prio)
+        plotDCFByCK(preProc, minDCFs, "noKern")
