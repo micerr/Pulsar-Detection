@@ -1,0 +1,14 @@
+GMM Classifiers Raw
+Full Cov, 16 Gau                     	0.121		0.225		0.605
+Diag Cov, 8 Gau                      	0.142		0.265		0.613
+Tied Cov, 32 Gau                      	0.134		0.256		0.653
+Tied Diag Cov, 32 Gau                 	0.129		0.249		0.617
+GMM Classifiers Gaussianized
+GMM Full Covariance comps=4 alpha=0.1 psi=0.01
+Full Cov, 4 Gau                      	0.128		0.239		0.623
+GMM Diagonal Covariance comps=32 alpha=0.1 psi=0.01
+Diag Cov, 32 Gau                      	0.149		0.259		0.607
+GMM Tied Covariance comps=32 alpha=0.1 psi=0.01
+Tied Cov, 32 Gau                      	0.147		0.223		0.681
+GMM Diagonal-Tied Covariance comps=16 alpha=0.1 psi=0.01
+Tied Diag Cov, 16 Gau                 	0.142		0.244		0.668
