@@ -184,7 +184,7 @@ class LogisticRegression(PipelineStage):
         self.Z = None
         self.D = None
         self.dim = None
-        self.piT = 0.5  # balancer prior prob
+        self.piT = None  # balancer prior prob
         self.isExpanded = False
         
     def J(self, x):
@@ -457,7 +457,7 @@ class SVM(PipelineStage):
         return newModel, D, L
 
     def __str__(self):
-        return "SVM %s" % ("hard-margin" if self.C == 0 else "soft-margin")
+        return "SVM %s piT=%.1f" % (("hard-margin" if self.C == 0 else "soft-margin"), self.piT)
 
 class GMM(PipelineStage):
 

@@ -3,15 +3,16 @@ import matplotlib.pyplot as plt
 
 from Pipeline import Pipeline, VoidStage, CrossValidator
 from classifiers import MVG, NaiveBayesMVG, TiedMVG, TiedNaiveBayesMVG, LogisticRegression, SVM
-from Tools import mcol, vec, load_dataset, load_avila, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
+from Tools import mcol, vec, load_dataset, assign_label_bin, accuracy, DCF_norm_bin, DCF_min, logpdf_GMM, EM, mrow, \
     LBG_x2_Cluster, assign_label_multi
 from plots import Scatter, Histogram, print_pearson_correlation_matrices
 from preProc import PCA, L2Norm, ZNorm, Gaussianization
 
 effPriors = [0.5, 0.1, 0.9]
 lambdas = [10**-6, 10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, 10**3, 10**4, 10**5, 10**6]
-C = [10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, 10**3]
-K = [10**-2, 10**-1, 10**0, 10**1, 10**2]
+C = [10**-3, 10**-2, 10**-1, 10**0, 10**1]
+K = [10**0, 10**1]
+G = [10**-3, 10**-2, 10**-1, 10**0]
 
 if __name__ == "__main__":
     (DTR, LTR), _, labelDict = load_dataset()
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     mvgTiedNaive1 = TiedNaiveBayesMVG()
     mvgTiedNaive1.setPiT(0.1)
     mvgTiedNaive9 = TiedNaiveBayesMVG()
-    mvgTiedNaive1.setPiT(0.9)
+    mvgTiedNaive9.setPiT(0.9)
 
     cv = CrossValidator()
     cv.setNumFolds(8)
@@ -97,7 +98,7 @@ if __name__ == "__main__":
 
     # print("MVG Classifiers ")
     # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    # for dataPrec in [VoidStage(), L2Norm(), Gaussianization()]:
+    # for dataPrec in [VoidStage(), Gaussianization()]:
     #     for featureExtr in [VoidStage(), PCA()]:
     #         if type(featureExtr) is PCA:
     #             for i in range(5, 8)[::-1]:
@@ -195,29 +196,165 @@ if __name__ == "__main__":
         plt.xlabel("C")
         plt.ylabel("DCF")
         x = np.linspace(C[0], C[-1], len(C))
-        for j in range(len(K)):
-            plt.plot(x, minDCFs[0, j, :], labelDict="minDCF(piT= 0.5)")
-            plt.plot(x, minDCFs[1, j, :], labelDict="minDCF(piT= 0.1)")
-            plt.plot(x, minDCFs[2, j, :], labelDict="minDCF(piT= 0.9)")
+        for j, k in enumerate(K):
+            plt.plot(x, minDCFs[0, j, :], label=("minDCF(piT= 0.5) K=%.1f" % k))
+            plt.plot(x, minDCFs[1, j, :], label=("minDCF(piT= 0.1) K=%.1f" % k))
+            plt.plot(x, minDCFs[2, j, :], label=("minDCF(piT= 0.9) K=%.1f" % k))
         plt.xlim([C[0], C[-1]])
         plt.ylim([0, 1])
         plt.legend()
         plt.savefig("./plots/svm/"+directory+"/"+preProc.__str__()+".png", dpi=300)
         plt.show()
 
-    # find best C and K linear
-    svm.setNoKern()
+    def plotDCFByCGamma(preProc, minDCFs, directory):
+        plt.figure()
+        plt.title(directory+" "+preProc.__str__())
+        plt.xscale("log")
+        plt.xlabel("C")
+        plt.ylabel("DCF")
+        x = np.linspace(C[0], C[-1], len(C))
+        for j, g in enumerate(G):
+            plt.plot(x, minDCFs[0, j, :], label=("log(g)=%d" % np.log10(g)))
+            # plt.plot(x, minDCFs[1, j, :], label=("minDCF(piT= 0.1) g=%.1f" % g))
+            # plt.plot(x, minDCFs[2, j, :], label=("minDCF(piT= 0.9) g=%.1f" % g))
+        plt.xlim([C[0], C[-1]])
+        plt.ylim([0, 0.5])
+        plt.legend()
+        plt.savefig("./plots/svm/"+directory+"/"+preProc.__str__()+".png", dpi=300)
+        plt.show()
 
-    minDCFs = np.zeros((3, len(K), len(C)))
-    for preProc in [VoidStage(), L2Norm(), Gaussianization()]:
-        for i, c in enumerate(C):
-            for n, k in enumerate(K):
-                svm.setC(c)
-                svm.setK(k)
-                pipe.setStages([ZNorm(), preProc, svm])
-                cv.setEstimator(pipe)
-                llr = cv.fit(DTR, LTR)
-                for j, prio in enumerate(effPriors):
-                    print(c, " ", k, " ", prio)
-                    minDCFs[j, n, i] = DCF_min(llr, LTR, pi=prio)
-        plotDCFByCK(preProc, minDCFs, "noKern")
+    def plotDCFByC(preProc, minDCFs, directory):
+        plt.figure()
+        plt.title(directory + " " + preProc.__str__())
+        plt.xscale("log")
+        plt.xlabel("C")
+        plt.ylabel("DCF")
+        x = np.linspace(C[0], C[-1], len(C))
+        plt.plot(x, minDCFs[0], label="minDCF(piT= 0.5)")
+        plt.plot(x, minDCFs[1], label="minDCF(piT= 0.1)")
+        plt.plot(x, minDCFs[2], label="minDCF(piT= 0.9)")
+        plt.xlim([C[0], C[-1]])
+        plt.ylim([0, 1])
+        plt.legend()
+        plt.savefig("./plots/svm/" + directory + "/" + preProc.__str__() + ".png", dpi=300)
+        plt.show()
+
+    # plotDCFByCK(VoidStage(), np.load("./minDCFsSVM_CK.npy"), "noKern")
+
+    # find best C
+    # svm.setNoKern()
+    # svm.setK(1)
+    # print("finding best C for noKern")
+    # minDCFs = np.zeros((3, len(C)))
+    # for preProc in [VoidStage(), Gaussianization()]:
+    #     for i, c in enumerate(C):
+    #         svm.setC(c)
+    #         pipe.setStages([ZNorm(), preProc, svm])
+    #         cv.setEstimator(pipe)
+    #         llr = cv.fit(DTR, LTR)
+    #         for j, prio in enumerate(effPriors):
+    #             print(c, " ", prio)
+    #             minDCFs[j, i] = DCF_min(llr, LTR, pi=prio)
+    #     plotDCFByC(preProc, minDCFs, "noKern")
+
+    def forEachSVMModel(dataPrec, featureExtr):
+        for i, classificator in enumerate([svm, svm, svm]):
+            svm.setPiT(effPriors[i])
+            print("%-30s" % classificator.__str__(), end="\t")
+            pipe.setStages([ZNorm(), dataPrec, featureExtr, classificator])
+            cv.setEstimator(pipe)
+            llr = cv.fit(DTR, LTR)
+            for prio in effPriors:
+                minDFC = DCF_min(llr, LTR, pi=prio)
+                print("%.3f" % minDFC, end="\t\t")
+            print()
+
+    # svm.setK(1)
+    # svm.setC(10**-1)
+    # svm.setNoKern()
+    #
+    # print("SVM Classifiers No Kernel ")
+    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    # for dataPrec in [VoidStage(), Gaussianization()]:
+    #     for featureExtr in [VoidStage(), PCA()]:
+    #         if type(featureExtr) is PCA:
+    #             continue
+    #             # for i in range(5, 8)[::-1]:
+    #             #     featureExtr.setDimension(i)
+    #             #     print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #             #     forEachSVMModel(dataPrec, featureExtr)
+    #         else:
+    #             print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #             forEachSVMModel(dataPrec, featureExtr)
+
+    # SVM Polynomial kernel find the best C
+    #
+    # print("finding best C for polynomial")
+    # svm.setPiT(0.5)
+    # svm.setK(1)
+    # svm.setPolyKernel(1, 2)
+    # minDCFs = np.zeros((3, len(C)))
+    # for preProc in [VoidStage()]:
+    #     for i, c in enumerate(C):
+    #         svm.setC(c)
+    #         pipe.setStages([ZNorm(), preProc, svm])
+    #         cv.setEstimator(pipe)
+    #         llr = cv.fit(DTR, LTR)
+    #         np.save("./svmPoly"+preProc.__str__()+str(c), llr)
+    #         for j, prio in enumerate(effPriors):
+    #             print(c, " ", prio)
+    #             minDCFs[j, i] = DCF_min(llr, LTR, pi=prio)
+    #     plotDCFByC(preProc, minDCFs, "poly")
+    #     np.save("./svmPoly"+preProc.__str__(), minDCFs)
+    #
+    # svm.setK()
+    # svm.setC()
+    # svm.setPolyKernel(1, 2)
+    #
+    # print("SVM Classifiers Poly Kernel ")
+    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    # for dataPrec in [VoidStage()]:
+    #     for featureExtr in [VoidStage()]:
+    #         if type(featureExtr) is PCA:
+    #             for i in range(5, 8)[::-1]:
+    #                 featureExtr.setDimension(i)
+    #                 print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #                 forEachSVMModel(dataPrec, featureExtr)
+    #         else:
+    #             print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #             forEachSVMModel(dataPrec, featureExtr)
+
+    # svm.setK(1)
+    # svm.setPiT(0.5)
+    # print("find best C and gamma for RBF")
+    # minDCFs = np.zeros((3, len(G), len(C)))
+    # for preProc in [VoidStage()]:
+    #     for i, c in enumerate(C):
+    #         for n, g in enumerate(G):
+    #             svm.setC(c)
+    #             svm.setRBFKernel(g)
+    #             pipe.setStages([ZNorm(), preProc, svm])
+    #             cv.setEstimator(pipe)
+    #             llr = cv.fit(DTR, LTR)
+    #             for j, prio in enumerate(effPriors):
+    #                 print(c, " ", g, " ", prio)
+    #                 minDCFs[j, n, i] = DCF_min(llr, LTR, pi=prio)
+    #     plotDCFByCGamma(preProc, minDCFs, "RBF")
+
+    # svm.setC(10)
+    # svm.setK(1)
+    # svm.setRBFKernel(10**-2)
+
+    # print("SVM Classifiers RBF Kernel ")
+    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    # for dataPrec in [VoidStage()]:
+    #     for featureExtr in [VoidStage()]:
+    #         if type(featureExtr) is PCA:
+    #             continue
+    #             # for i in range(5, 8)[::-1]:
+    #             #     featureExtr.setDimension(i)
+    #             #     print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #             #     forEachSVMModel(dataPrec, featureExtr)
+    #         else:
+    #             print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+    #             forEachSVMModel(dataPrec, featureExtr)

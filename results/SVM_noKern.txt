@@ -1,0 +1,17 @@
+MVG Classifiers No Kernel C=10**-1
+                              	pi = 0.5	pi = 0.1	pi = 0.9
+Raw -- Raw
+SVM soft-margin piT=0.5       	0.114		0.225		0.571
+SVM soft-margin piT=0.1       	0.113		0.217		0.577
+SVM soft-margin piT=0.9       	0.128		0.232		0.566
+Gaussianization -- Raw
+SVM soft-margin piT=0.5       	0.120		0.249		0.522
+SVM soft-margin piT=0.1       	0.134		0.239		0.531
+SVM soft-margin piT=0.9       	0.133		0.238		0.530
+
+MVG Classifiers No Kernel C=1
+                              	pi = 0.5	pi = 0.1	pi = 0.9
+Raw -- Raw
+SVM soft-margin piT=0.5       	0.110		0.222		0.558
+SVM soft-margin piT=0.1       	0.114		0.216		0.585
+SVM soft-margin piT=0.9       	0.124		0.222		0.560

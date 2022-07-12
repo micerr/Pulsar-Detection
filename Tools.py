@@ -164,6 +164,8 @@ def LBG_x2_Cluster(X, gmm, alpha, i, psi=0, diag=False, tied=False):
         mu = numpy.mean(X, axis=1)
         XC = X - mcol(mu)
         C = numpy.dot(XC, XC.T) / X.shape[1]
+        if diag:
+            C = C * numpy.eye(X.shape[0])
         return [(1.0, mcol(mu), C)]
 
     for _ in range(i):
@@ -222,7 +224,7 @@ def accuracy(P, L):
 
 def assign_label_bin(llr, p=0.5, Cfn=1, Cfp=1, t=None):
     if t is None:
-        t = - numpy.log((p * Cfn) / ((1 - p) * Cfp))
+        t = - numpy.log((p * Cfn) / ((1 - p) * Cfp))  # optimal threshold
     P = (llr > t) + 0  # + 0 converts booleans to integers
     return P
 
@@ -325,66 +327,3 @@ def load_dataset():
     
     return (DTR, LTR), (DTE, LTE), labelDict
   
-    
-# For testing that everything is working properly  
-# Modified version: only most frequentest copyists are taken in consideration
-def load_avila():
-    
-    DTR = []
-    LTR = []
-    DTE = []
-    LTE = []
-    
-    labelDict = {
-        0: 'intercolumnar distance', 
-        1: 'upper margin', 
-        2: 'lower margin', 
-        3: 'exploitation', 
-        4: 'row number', 
-        5: 'modular ratio', 
-        6: 'interlinear spacing', 
-        7: 'weight', 
-        8: 'peak number', 
-        9: 'modular ratio/ interlinear spacing'
-    }
-    
-    with open('./avila/avila-tr.txt', 'r') as trainData:
-        for line in trainData:
-            try:
-                fields = line.split(',')[0:10]
-                fields = mcol(numpy.array([float(i) for i in fields]))
-                label = line.split(',')[-1].strip()
-                if label == 'A' or label == 'F':
-                    if label == 'A':
-                        label = 0
-                    elif label == 'F':
-                        label = 1
-                    DTR.append(fields)
-                    LTR.append(label)
-            except:
-                pass
-        
-        DTR = numpy.hstack(DTR)
-        LTR = numpy.array(LTR)
-    
-    with open('./avila/avila-ts.txt', 'r') as testData:
-        for line in testData:
-            try:
-                fields = line.split(',')[0:10]
-                fields = mcol(numpy.array([float(i) for i in fields]))
-                label = line.split(',')[-1].strip()
-                if label == 'A' or label == 'F':
-                    if label == 'A':
-                        label = 0
-                    elif label == 'F':
-                        label = 1
-                    DTE.append(fields)
-                    LTE.append(label)
-            except:
-                pass
-            
-        DTE = numpy.hstack(DTE)
-        LTE = numpy.array(LTE)
-    
-    return (DTR, LTR), (DTE, LTE), labelDict
-    

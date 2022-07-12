@@ -1,9 +1,12 @@
 import matplotlib.pyplot as plt
+import matplotlib
 import seaborn as sns
 import numpy
+from sklearn.metrics import DetCurveDisplay
 
 from Pipeline import PipelineStage
 from Tools import confusion_matrix, DCF_norm_bin, DCF_min, pearson_correlation_mat
+from preProc import inv_cdf_GAU_STD
 
 
 class Histogram(PipelineStage):
@@ -114,14 +117,14 @@ class Scatter(PipelineStage):
     def __str__(self):
         return "Scatter\n"
 
-def print_ROCs(llrs, L, titles):
+def print_ROCs(llrs, L, titles, name):
     plt.figure()
     plt.xlabel("FPR")
     plt.ylabel("TPR")
     for i in range(len(llrs)):
         ts = numpy.array(llrs[i])
         ts.sort()
-        ts = numpy.concatenate((numpy.array([-numpy.inf]), ts, numpy.array([+numpy.inf])))
+        ts = numpy.concatenate((numpy.array([-numpy.inf]), ts.ravel(), numpy.array([+numpy.inf])))
         x = []
         y = []
         for t in ts:
@@ -133,12 +136,48 @@ def print_ROCs(llrs, L, titles):
             TPR = 1 - FNR
             x.append(FPR)
             y.append(TPR)
-        plt.scatter(x, y, s=4, label=titles[i])
+        plt.plot(x, y, label=titles[i])
     plt.legend()
+    plt.savefig("./plots/ROCDET/ROC"+name+".png", dpi=600)
     plt.show()
 
-def bayes_error_addToPlot(llr, L, title):
-    effPriorLogOdds = numpy.linspace(-3, 3, 21)
+def print_DETs(ss, L, titles, name):
+    figure, ax = plt.subplots()
+    ax.set(xlabel="FPR", ylabel="FNR")
+    ticks = [0.001, 0.01, 0.05, 0.20, 0.5, 0.80, 0.95, 0.99, 0.999]
+    tick_locations = inv_cdf_GAU_STD(numpy.array(ticks))
+    tick_labels = [
+        "{:.0%}".format(s) if (100 * s).is_integer() else "{:.1%}".format(s)
+        for s in ticks
+    ]
+    ax.set_xticks(tick_locations)
+    ax.set_xticklabels(tick_labels)
+    ax.set_xlim(-3, 2)
+    ax.set_yticks(tick_locations)
+    ax.set_yticklabels(tick_labels)
+    ax.set_ylim(-3, 1)
+
+    for i in range(len(ss)):
+        ts = numpy.array(ss[i])
+        ts.sort()
+        ts = numpy.concatenate((numpy.array([-numpy.inf]), ts.ravel(), numpy.array([+numpy.inf])))
+        x = []
+        y = []
+        for t in ts:
+            P = (ss[i] > t) + 0
+            M = confusion_matrix(P, L)
+            TN, FN, FP, TP = M[0, 0], M[0, 1], M[1, 0], M[1, 1]
+            FPR = FP / (TN + FP)
+            FNR = FN / (FN + TP)
+            x.append(FPR)
+            y.append(FNR)
+        ax.plot(inv_cdf_GAU_STD(numpy.array(x)), inv_cdf_GAU_STD(numpy.array(y)), label=titles[i])
+    ax.legend()
+    plt.savefig("./plots/ROCDET/DET"+name+".png", dpi=600)
+
+
+def bayes_error_addToPlot(llr, L, title, colo):
+    effPriorLogOdds = numpy.linspace(-4, 4, 25)
     mindcf = []
     dcf = []
     for effPriorLogOdd in effPriorLogOdds:
@@ -146,18 +185,21 @@ def bayes_error_addToPlot(llr, L, title):
         dcf.append(DCF_norm_bin(llr, L, effPrior, 1, 1))  # actually
         mindcf.append(DCF_min(llr, L, effPrior, 1, 1))  # minimum
 
-    plt.plot(effPriorLogOdds, dcf, label="DCF "+title.__str__())
-    plt.plot(effPriorLogOdds, mindcf, label="min DCF "+title.__str__())
+    plt.plot(effPriorLogOdds, dcf, label="DCF "+title.__str__(), color=colo)
+    plt.plot(effPriorLogOdds, mindcf, label="min DCF "+title.__str__(), linestyle="--", color= colo)
 
-def print_DCFs(llrs, L, descriptions):
+def print_DCFs(llrs, L, descriptions, nameFigure, title):
+    colors = ["b", "r", "g", "y"]
     plt.figure()
+    plt.title(title)
     plt.xlabel("log-odds")
     plt.ylabel("DCF value")
     for i in range(len(llrs)):
-        bayes_error_addToPlot(llrs[i], L, descriptions[i])
+        bayes_error_addToPlot(llrs[i], L, descriptions[i], colors[i])
     plt.ylim([0, 1.1])
-    plt.xlim([-3, 3])
+    plt.xlim([-4, 4])
     plt.legend()
+    plt.savefig("./plots/DCF/"+nameFigure+".png", dpi=300)
     plt.show()
 
 def print_pearson_correlation_mat(D, title, directory=None):
