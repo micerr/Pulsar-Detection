@@ -5,17 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f312997-28a4-429a-954f-52679901ac17" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/evalMain.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/SVM_RBFKern.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/SVM_noKern.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/SVM_polyKern.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resultsEval/LogReg.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resultsEval/SVMEval.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resultsEval/final_res.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/classifiers.py" beforeDir="false" afterPath="$PROJECT_DIR$/classifiers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/GMMmain.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/evalMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/evalMain.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plots.py" beforeDir="false" afterPath="$PROJECT_DIR$/plots.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/preProc.py" beforeDir="false" afterPath="$PROJECT_DIR$/preProc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/valMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/valMain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -169,8 +167,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="valMain" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="myProject" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject\valMain.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.evalMain" />
         <item itemvalue="Python.evalMain" />
         <item itemvalue="Python.main" />
         <item itemvalue="Python.GMMmain" />
@@ -189,7 +207,7 @@
       <workItem from="1656611090434" duration="42234000" />
       <workItem from="1656940402143" duration="162651000" />
       <workItem from="1657353550571" duration="10800000" />
-      <workItem from="1657524874450" duration="80351000" />
+      <workItem from="1657524874450" duration="115297000" />
     </task>
     <servers />
   </component>
@@ -233,6 +251,6 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/myProject$main.coverage" NAME="main Coverage Results" MODIFIED="1657570530766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/myProject$GMMmain.coverage" NAME="GMMmain Coverage Results" MODIFIED="1657550020091" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/myProject$evalMain.coverage" NAME="evalMain Coverage Results" MODIFIED="1657648051984" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/myProject$evalMain.coverage" NAME="evalMain Coverage Results" MODIFIED="1657726279196" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

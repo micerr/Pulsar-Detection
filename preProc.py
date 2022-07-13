@@ -175,6 +175,9 @@ class Gaussianization(PipelineStage):
         super().__init__()
 
     def compute(self, model, D, L):
+        """
+        Same thing can be done with rankdata() of scipy library
+        """
         N = D.shape[1]
         sort_feature = numpy.sort(D, axis=1)
         R = numpy.zeros(D.shape)

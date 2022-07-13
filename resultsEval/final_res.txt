@@ -1,0 +1,17 @@
+Uncalibrated
+Quad Log Reg
+minDCF	0.109	0.207	0.423
+actDCF	0.110	0.212	0.434
+SVM RBF Kernel
+minDCF	0.098	0.200	0.478
+actDCF	0.107	0.370	0.848
+After Fusion
+Quad Log Reg
+minDCF	0.109	0.207	0.423
+actDCF	0.110	0.222	0.472
+SVM RBF Kernel
+minDCF	0.098	0.200	0.478
+actDCF	0.102	0.210	0.493
+Fusion
+minDCF	0.099	0.197	0.436
+actDCF	0.101	0.204	0.467

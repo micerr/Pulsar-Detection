@@ -107,18 +107,6 @@ if __name__ == "__main__":
     scsvm = cv.fit(ssvm, LTR)
     fusion = numpy.vstack((sclr, scsvm))
 
-    # find best lambda linear
-    # minDCFs = np.zeros((3, 13))
-    # for i, lambd in enumerate(lambdas):
-    #     lr.setLambda(lambd)
-    #     pipe.setStages([lr])
-    #     cv.setEstimator(pipe)
-    #     s = cv.fit(fusion, LTR)
-    #     for j, prio in enumerate(effPriors):
-    #         print(lambd, " ", prio)
-    #         minDCFs[j, i] = DCF_min(s, LTR, pi=prio)
-    # print(minDCFs)
-
     sFusion = cv.fit(fusion, LTR)
 
     print("After Fusion")
