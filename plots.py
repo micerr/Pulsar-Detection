@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
-import matplotlib
 import seaborn as sns
 import numpy
-from sklearn.metrics import DetCurveDisplay
 
 from Pipeline import PipelineStage
 from Tools import confusion_matrix, DCF_norm_bin, DCF_min, pearson_correlation_mat

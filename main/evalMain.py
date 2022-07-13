@@ -51,18 +51,18 @@ if __name__ == "__main__":
                 print("%.3f" % minDFC, end="\t\t")
             print()
 
-    # print("MVG Classifiers ")
-    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    # for dataPrec in [VoidStage(), Gaussianization()]:
-    #     for featureExtr in [VoidStage(), PCA()]:
-    #         if type(featureExtr) is PCA:
-    #             for i in range(6, 8)[::-1]:
-    #                 featureExtr.setDimension(i)
-    #                 print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
-    #                 forEachGenerativeModel(dataPrec, featureExtr)
-    #         else:
-    #             print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
-    #             forEachGenerativeModel(dataPrec, featureExtr)
+    print("MVG Classifiers ")
+    print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    for dataPrec in [VoidStage(), Gaussianization()]:
+        for featureExtr in [VoidStage(), PCA()]:
+            if type(featureExtr) is PCA:
+                for i in range(6, 8)[::-1]:
+                    featureExtr.setDimension(i)
+                    print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+                    forEachGenerativeModel(dataPrec, featureExtr)
+            else:
+                print("%s -- %s" % (dataPrec.__str__(), featureExtr.__str__()))
+                forEachGenerativeModel(dataPrec, featureExtr)
 
     lr = LogisticRegression()
 
@@ -126,23 +126,23 @@ if __name__ == "__main__":
     lr.setLambda(10**-6)
     lr.setExpanded(False)
 
-    # findBestLambda(lr, "linear")
+    findBestLambda(lr, "linear")
 
-    # print("LogReg linear Classifiers ")
-    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    # for dataPrec in [VoidStage(), Gaussianization()]:
-    #     print("%s -- %s" % (dataPrec.__str__(), VoidStage().__str__()))
-    #     forEachLogRegModel(dataPrec, VoidStage())
+    print("LogReg linear Classifiers ")
+    print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    for dataPrec in [VoidStage(), Gaussianization()]:
+        print("%s -- %s" % (dataPrec.__str__(), VoidStage().__str__()))
+        forEachLogRegModel(dataPrec, VoidStage())
 
     lr.setExpanded(True)
 
-    # findBestLambda(lr, "quad")
+    findBestLambda(lr, "quad")
 
-    # print("LogReg Quadratic Classifiers ")
-    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    # for dataPrec in [VoidStage(), Gaussianization()]:
-    #     print("%s -- %s" % (dataPrec.__str__(), VoidStage().__str__()))
-    #     forEachLogRegModel(dataPrec, VoidStage())
+    print("LogReg Quadratic Classifiers ")
+    print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    for dataPrec in [VoidStage(), Gaussianization()]:
+        print("%s -- %s" % (dataPrec.__str__(), VoidStage().__str__()))
+        forEachLogRegModel(dataPrec, VoidStage())
 
     def forEachSVMModel(dataPrec, featureExtr):
         for i, classificator in enumerate([svm, svm, svm]):
@@ -236,61 +236,60 @@ if __name__ == "__main__":
                 scoresEval[i, n] = llr
         np.save("./partial/SVM" + type + "BestEval", scoresEval)
 
-        # print("finding best Gamma for " + type + " Train")
-        # scoresTrain = np.zeros((len(C), len(G), LTR.size))
-        # for i, c in enumerate(C):
-        #     for n, g in enumerate(G):
-        #         svm.setC(c)
-        #         svm.setRBFKernel(g)
-        #         pipe.setStages([ZNorm(), svm])
-        #         llr = cv.fit(DTR, LTR)
-        #         scoresTrain[i, n] = llr
-        # np.save("./partial/SVM" + type + "BestTrain", scoresTrain)
+        print("finding best Gamma for " + type + " Train")
+        scoresTrain = np.zeros((len(C), len(G), LTR.size))
+        for i, c in enumerate(C):
+            for n, g in enumerate(G):
+                svm.setC(c)
+                svm.setRBFKernel(g)
+                pipe.setStages([ZNorm(), svm])
+                llr = cv.fit(DTR, LTR)
+                scoresTrain[i, n] = llr
+        np.save("./partial/SVM" + type + "BestTrain", scoresTrain)
 
         scoresEval = np.load("./partial/SVM" + type + "BestEval.npy")
-        # scoresTrain = np.load("./partial/SVM" + type + "BestTrain.npy")
+        scoresTrain = np.load("./partial/SVM" + type + "BestTrain.npy")
 
         minDCFEval = numpy.zeros((len(G), len(C)))
-        # minDCFTrain = numpy.zeros((len(G), len(C)))
-        minDCFTrain = numpy.load("./partial/SVMRBFMinDCF.npy")[0]
+        minDCFTrain = numpy.zeros((len(G), len(C)))
         for i in range(len(C)):
             for j in range(len(G)):
                 minDCFEval[j, i] = DCF_min(scoresEval[i, j], LTE, pi=0.5)
-                # minDCFTrain[j, i] = DCF_min(scoresTrain[i, j], LTR, pi=app)
+                minDCFTrain[j, i] = DCF_min(scoresTrain[i, j], LTR, pi=app)
         plotDCFByCGamma(VoidStage(), [minDCFEval, minDCFTrain], type)
 
     svm = SVM()
     svm.setNoKern()
     svm.setK(1)
 
-    # findBestC(svm, "noKern")
+    findBestC(svm, "noKern")
 
     svm.setK(1)
     svm.setNoKern()
 
-    # print("SVM Classifiers No Kernel ")
-    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    # for dataPrec in [VoidStage(), Gaussianization()]:
-    #     if type(dataPrec) is VoidStage():
-    #         svm.setC(1)
-    #     else:
-    #         svm.setC(10**-1)
-    #     print("%s -- %s" % (dataPrec.__str__(), VoidStage().__str__()))
-    #     forEachSVMModel(dataPrec, VoidStage())
+    print("SVM Classifiers No Kernel ")
+    print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    for dataPrec in [VoidStage(), Gaussianization()]:
+        if type(dataPrec) is VoidStage():
+            svm.setC(1)
+        else:
+            svm.setC(10**-1)
+        print("%s -- %s" % (dataPrec.__str__(), VoidStage().__str__()))
+        forEachSVMModel(dataPrec, VoidStage())
 
     svm.setK(1)
     svm.setPolyKernel(1, 2)
 
-    # findBestC(svm, "poly")
+    findBestC(svm, "poly")
 
     svm.setK(1)
     svm.setC(1)
     svm.setPolyKernel(1, 2)
 
-    # print("SVM Classifiers Poly Kernel ")
-    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    # print("%s -- %s" % (VoidStage().__str__(), VoidStage().__str__()))
-    # forEachSVMModel(VoidStage(), VoidStage())
+    print("SVM Classifiers Poly Kernel ")
+    print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    print("%s -- %s" % (VoidStage().__str__(), VoidStage().__str__()))
+    forEachSVMModel(VoidStage(), VoidStage())
 
     svm.setC(10)
     svm.setK(1)
@@ -299,10 +298,10 @@ if __name__ == "__main__":
     print("SVM RBF")
     findBestGamma(svm, "RBF")
 
-    # print("SVM Classifiers RBF Kernel ")
-    # print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
-    # print("%s -- %s" % (VoidStage().__str__(), VoidStage().__str__()))
-    # forEachSVMModel(VoidStage(), VoidStage())
+    print("SVM Classifiers RBF Kernel ")
+    print("%-30s\tpi = 0.5\tpi = 0.1\tpi = 0.9" % "")
+    print("%s -- %s" % (VoidStage().__str__(), VoidStage().__str__()))
+    forEachSVMModel(VoidStage(), VoidStage())
 
     gmm = GMM()
     gmm.setDiagonal(False)
@@ -334,74 +333,72 @@ if __name__ == "__main__":
         plt.savefig("./plots/gmm/Eval" + type + ".png", dpi=300)
         plt.show()
 
-    # # Find best number of components
-    # minDCFs = np.zeros((4, 2, 6))
-    # for k in range(4):
-    #     for i in range(0, 6):
-    #         for j, dataProc in enumerate([VoidStage(), Gaussianization()]):
-    #             if k == 1:
-    #                 gmm.setDiagonal(True)
-    #                 gmm.setTied(False)
-    #                 print("Diagonal ", end="")
-    #             elif k == 2:
-    #                 gmm.setTied(True)
-    #                 gmm.setDiagonal(False)
-    #                 print("Tied ", end="")
-    #             elif k == 3:
-    #                 gmm.setTied(True)
-    #                 gmm.setDiagonal(True)
-    #                 print("Tied-Diagonal ", end="")
-    #             else:
-    #                 print("Full Covariance ", end="")
-    #             gmm.setIterationLBG(i)
-    #             pipe.setStages([ZNorm(), dataProc, gmm])
-    #             model = pipe.fit(DTR, LTR)
-    #             llr = model.transform(DTE, LTE)
-    #             minDCFs[k, j, i] = DCF_min(llr, LTE, 0.5)
-    #             print("%s %d" % (("Raw" if j == 0 else "Gaussian"), i))
-    # np.save("./partial/GMMTuningEval.npy", minDCFs)
+    # Find best number of components
+    minDCFs = np.zeros((4, 2, 6))
+    for k in range(4):
+        for i in range(0, 6):
+            for j, dataProc in enumerate([VoidStage(), Gaussianization()]):
+                if k == 1:
+                    gmm.setDiagonal(True)
+                    gmm.setTied(False)
+                    print("Diagonal ", end="")
+                elif k == 2:
+                    gmm.setTied(True)
+                    gmm.setDiagonal(False)
+                    print("Tied ", end="")
+                elif k == 3:
+                    gmm.setTied(True)
+                    gmm.setDiagonal(True)
+                    print("Tied-Diagonal ", end="")
+                else:
+                    print("Full Covariance ", end="")
+                gmm.setIterationLBG(i)
+                pipe.setStages([ZNorm(), dataProc, gmm])
+                model = pipe.fit(DTR, LTR)
+                llr = model.transform(DTE, LTE)
+                minDCFs[k, j, i] = DCF_min(llr, LTE, 0.5)
+                print("%s %d" % (("Raw" if j == 0 else "Gaussian"), i))
+    np.save("./partial/GMMTuningEval.npy", minDCFs)
 
-    minDCFsTrain = numpy.load("./partial/GMMTuning.npy")[:, :, 0:6]
-    minDCFs = numpy.load("./partial/GMMTuningEval.npy")
+    minDCFsTrain = numpy.load("../partial/GMMTuning.npy")[:, :, 0:6]
+    minDCFs = numpy.load("../partial/GMMTuningEval.npy")
 
     print("GMM chars")
     for i, type in enumerate(['Full_Cov', 'Diagonal_Cov', 'Tied_Cov', 'Tied_Diagonal_Cov']):
         printChars(type, minDCFs[i], minDCFsTrain[i])
 
-    # print("GMM Classifiers Raw")
-    # for diag, tied, iterations, type in [(False, False, 4, "Full Cov"), (True, False, 3, "Diag Cov"),
-    #                                      (False, True, 5, "Tied Cov"), (True, True, 5, "Tied Diag Cov")]:
-    #     gmm.setDiagonal(diag)
-    #     gmm.setTied(tied)
-    #     gmm.setIterationLBG(iterations)
-    #     pipe.setStages([ZNorm(), gmm])
-    #     model = pipe.fit(DTR, LTR)
-    #     s = model.transform(DTE, LTE)
-    #     print("%-30s" % type, end="\t")
-    #     for app in applications:
-    #         minDFC = DCF_min(s, LTE, pi=app)
-    #         # pred = assign_label_bin(llr, p=prio)
-    #         # acc = accuracy(pred, LTR)
-    #         print("%.3f" % minDFC, end="\t\t")
-    #     print()
-    #
-    # print("GMM Classifiers Gaussianized")
-    # for diag, tied, iterations, type in [(False, False, 2, "Full Cov"), (True, False, 5, "Diag Cov"),
-    #                                      (False, True, 5, "Tied Cov"), (True, True, 4, "Tied Diag Cov")]:
-    #     gmm.setDiagonal(diag)
-    #     gmm.setTied(tied)
-    #     gmm.setIterationLBG(iterations)
-    #     pipe.setStages([ZNorm(), Gaussianization(), gmm])
-    #     print(gmm.__str__())
-    #     model = pipe.fit(DTR, LTR)
-    #     s = model.transform(DTE, LTE)
-    #     print("%-30s" % type, end="\t")
-    #     for app in applications:
-    #         minDFC = DCF_min(s, LTE, pi=app)
-    #         print("%.3f" % minDFC, end="\t\t")
-    #     print()
+    print("GMM Classifiers Raw")
+    for diag, tied, iterations, type in [(False, False, 4, "Full Cov"), (True, False, 3, "Diag Cov"),
+                                         (False, True, 5, "Tied Cov"), (True, True, 5, "Tied Diag Cov")]:
+        gmm.setDiagonal(diag)
+        gmm.setTied(tied)
+        gmm.setIterationLBG(iterations)
+        pipe.setStages([ZNorm(), gmm])
+        model = pipe.fit(DTR, LTR)
+        s = model.transform(DTE, LTE)
+        print("%-30s" % type, end="\t")
+        for app in applications:
+            minDFC = DCF_min(s, LTE, pi=app)
+            print("%.3f" % minDFC, end="\t\t")
+        print()
 
-    ######################################################################################
+    print("GMM Classifiers Gaussianized")
+    for diag, tied, iterations, type in [(False, False, 2, "Full Cov"), (True, False, 5, "Diag Cov"),
+                                         (False, True, 5, "Tied Cov"), (True, True, 4, "Tied Diag Cov")]:
+        gmm.setDiagonal(diag)
+        gmm.setTied(tied)
+        gmm.setIterationLBG(iterations)
+        pipe.setStages([ZNorm(), Gaussianization(), gmm])
+        print(gmm.__str__())
+        model = pipe.fit(DTR, LTR)
+        s = model.transform(DTE, LTE)
+        print("%-30s" % type, end="\t")
+        for app in applications:
+            minDFC = DCF_min(s, LTE, pi=app)
+            print("%.3f" % minDFC, end="\t\t")
+        print()
+
+    ##################################################################################################################
     ## Evaluation chosen Models
     ## TRAINING
     lr = LogisticRegression()
@@ -471,11 +468,11 @@ if __name__ == "__main__":
     sFusion = modelFusion.transform(numpy.vstack((sclr, scsvm)), None)
     np.save("./partial/Eval_fusion", sFusion)
 
-    sFusion = np.load("./partial/Eval_fusion.npy")
-    slr = np.load("./partial/Eval_quadLogReg-6_05.npy")
-    sclr = np.load("./partial/EvalCal_quadLogReg-6_05.npy")
-    ssvm = np.load("./partial/Eval_svmRBFRaw10_0.5.npy")
-    scsvm = np.load("./partial/EvalCal_svmRBFRaw10_0.5.npy")
+    sFusion = np.load("../partial/Eval_fusion.npy")
+    slr = np.load("../partial/Eval_quadLogReg-6_05.npy")
+    sclr = np.load("../partial/EvalCal_quadLogReg-6_05.npy")
+    ssvm = np.load("../partial/Eval_svmRBFRaw10_0.5.npy")
+    scsvm = np.load("../partial/EvalCal_svmRBFRaw10_0.5.npy")
 
     print("Uncalibrated")
     for i, s in enumerate([slr, ssvm]):
@@ -491,7 +488,7 @@ if __name__ == "__main__":
             print("%.3f" % actDCF, end="\t")
         print()
 
-    # print_DCFs([slr, ssvm], LTE, ["Quad Log Reg", "SVM RBF"], "Eval_quadLogReg_SVM_RBF_NoCalibr", "Uncalibrated")
+    print_DCFs([slr, ssvm], LTE, ["Quad Log Reg", "SVM RBF"], "Eval_quadLogReg_SVM_RBF_NoCalibr", "Uncalibrated")
 
     print("After Fusion")
     for i, s in enumerate([sclr, scsvm, sFusion]):

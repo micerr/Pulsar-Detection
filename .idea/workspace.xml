@@ -5,15 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f312997-28a4-429a-954f-52679901ac17" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/resultsEval/LogReg.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resultsEval/SVMEval.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resultsEval/final_res.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/calibrationFusionMain.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/finalMain.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GMMmain.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/evalMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/evalMain.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/preProc.py" beforeDir="false" afterPath="$PROJECT_DIR$/preProc.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/valMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/valMain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/evalMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/evalMain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots.py" beforeDir="false" afterPath="$PROJECT_DIR$/plots.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/valMain.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +58,7 @@
       <recent name="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject\main" />
       <recent name="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject\partial" />
       <recent name="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject\results" />
       <recent name="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject" />
@@ -117,7 +116,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evalMain.py" />
+      <option name="SCRIPT_NAME" value="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject\main\evalMain.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -158,7 +157,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="SCRIPT_NAME" value="D:\Documenti\Polito Magistrale\Machine Learning and Pattern Recognition\myProject\main\main.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -207,7 +206,7 @@
       <workItem from="1656611090434" duration="42234000" />
       <workItem from="1656940402143" duration="162651000" />
       <workItem from="1657353550571" duration="10800000" />
-      <workItem from="1657524874450" duration="115297000" />
+      <workItem from="1657524874450" duration="117988000" />
     </task>
     <servers />
   </component>
